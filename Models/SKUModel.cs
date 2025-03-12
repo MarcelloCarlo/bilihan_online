@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using NuGet.Protocol;
 
 namespace bilihan_online.Models;
 
@@ -17,8 +19,14 @@ public class SKUModel
     [DisplayName("Unit Price")]
     public decimal UnitPrice { get; set; }
 
-    [DisplayName("Product Image")]
     public byte[] ProductImage { get; set; }
+
+    [NotMapped]
+    public IFormFile ProductImageHolder { get; set; }
+
+    [DisplayName("Image")]
+    [NotMapped]
+    public string ProductImageString { get; set; }
 
     [DisplayName("Date Created")]
     public DateTime DateCreated { get; set; }

@@ -14,6 +14,7 @@ namespace bilihan_online.Controllers
     public class CustomerController : Controller
     {
         private readonly bilihanonlineContext _context;
+        private readonly string DEFAULT_USER_ID = "Admin";
 
         public CustomerController(bilihanonlineContext context)
         {
@@ -61,7 +62,9 @@ namespace bilihan_online.Controllers
             {
                 customerModel.FullName = string.Concat(customerModel.LastName, ", ", customerModel.FirstName);
                 customerModel.DateCreated = DateTime.Now;
+                customerModel.CreatedBy = DEFAULT_USER_ID;
                 customerModel.Timestamp = DateTime.Now;
+                customerModel.UserID = DEFAULT_USER_ID;
                 _context.Add(customerModel);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));

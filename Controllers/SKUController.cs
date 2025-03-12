@@ -13,6 +13,7 @@ namespace bilihan_online.Controllers
     public class SKUController : Controller
     {
         private readonly bilihanonlineContext _context;
+        private readonly string DEFAULT_USER_ID = "Admin";
 
         public SKUController(bilihanonlineContext context)
         {
@@ -22,7 +23,19 @@ namespace bilihan_online.Controllers
         // GET: SKU
         public async Task<IActionResult> Index()
         {
-            return View(await _context.SKUModel.ToListAsync());
+
+            return View(await _context.SKUModel.Select(s => new SKUModel{
+                ID = s.ID,
+                Name = s.Name,
+                Code = s.Code,
+                UnitPrice = s.UnitPrice,
+                ProductImageString = "data:image/png;base64," + Convert.ToBase64String(s.ProductImage),
+                DateCreated = s.DateCreated,
+                CreatedBy = s.CreatedBy,
+                Timestamp = s.Timestamp,
+                UserID = s.UserID,
+                IsActive = s.IsActive
+            }).ToListAsync());
         }
 
         // GET: SKU/Details/5
@@ -54,10 +67,28 @@ namespace bilihan_online.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Name,Code,UnitPrice,ProductImage,DateCreated,CreatedBy,Timestamp,UserID,IsActive")] SKUModel sKUModel)
+        public async Task<IActionResult> Create([Bind("Name,Code,UnitPrice,ProductImageHolder,IsActive")] SKUModel sKUModel)
         {
-            if (ModelState.IsValid)
+            if (!SKUModelExists(sKUModel))
             {
+                using (var memoryStream = new MemoryStream())
+                {
+                    sKUModel.ProductImageHolder.OpenReadStream().CopyTo(memoryStream);
+
+                    if (memoryStream.Length < 2097152)
+                    {
+                        sKUModel.ProductImage = memoryStream.ToArray();
+                    }
+                    else
+                    {
+                        return View(sKUModel);
+                    }
+
+                }
+                sKUModel.DateCreated = DateTime.Now;
+                sKUModel.CreatedBy = DEFAULT_USER_ID;
+                sKUModel.Timestamp = DateTime.Now;
+                sKUModel.UserID = DEFAULT_USER_ID;
                 _context.Add(sKUModel);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -152,6 +183,11 @@ namespace bilihan_online.Controllers
         private bool SKUModelExists(int id)
         {
             return _context.SKUModel.Any(e => e.ID == id);
+        }
+
+        private bool SKUModelExists(SKUModel skuModel)
+        {
+            return _context.SKUModel.Any(e => (e.Code == skuModel.Code || e.Name == skuModel.Name));
         }
     }
 }
