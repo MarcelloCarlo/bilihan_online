@@ -15,6 +15,7 @@ namespace bilihan_online.Controllers
     {
         private readonly bilihanonlineContext _context;
         private readonly string DEFAULT_USER_ID = "Admin";
+        private readonly ResultModel _resultModel = new ResultModel();
 
         public CustomerController(bilihanonlineContext context)
         {
@@ -58,18 +59,66 @@ namespace bilihan_online.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("FirstName,LastName,FullName,MobileNumber,City,IsActive")] CustomerModel customerModel)
         {
-            if (ModelState.IsValid && !CustomerModelExists(customerModel.FullName) && !CustomerModelExists(customerModel.MobileNumber))
+            try
             {
                 customerModel.FullName = string.Concat(customerModel.LastName, ", ", customerModel.FirstName);
-                customerModel.DateCreated = DateTime.Now;
-                customerModel.CreatedBy = DEFAULT_USER_ID;
-                customerModel.Timestamp = DateTime.Now;
-                customerModel.UserID = DEFAULT_USER_ID;
-                _context.Add(customerModel);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+
+                if (!CustomerModelExists(customerModel, "Create"))
+                {
+                    customerModel.DateCreated = DateTime.Now;
+                    customerModel.CreatedBy = DEFAULT_USER_ID;
+                    customerModel.Timestamp = DateTime.Now;
+                    customerModel.UserID = DEFAULT_USER_ID;
+                    _context.Add(customerModel);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                return View(customerModel);
             }
-            return View(customerModel);
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+
+        }
+
+        [HttpPost]
+        [RequireHttps]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> JsonCreate([Bind("FirstName,LastName,MobileNumber,City,IsActive")] CustomerModel customer)
+        {
+            try
+            {
+                customer.FullName = string.Concat(customer.LastName, ", ", customer.FirstName);
+
+                if (!CustomerModelExists(customer, "Create"))
+                {
+                    customer.DateCreated = DateTime.Now;
+                    customer.CreatedBy = DEFAULT_USER_ID;
+                    customer.Timestamp = DateTime.Now;
+                    customer.UserID = DEFAULT_USER_ID;
+                    _context.Add(customer);
+                    _resultModel.ItemsGenerated =  await _context.SaveChangesAsync();
+
+                    if (_resultModel.ItemsGenerated < 1)
+                    {
+                        UpdateResultModel(false, false, "Creation Failed.");
+                    }
+                    else
+                    {
+                        UpdateResultModel(true, false, "Creation Success.");
+                    }
+                }
+                //return View(customerModel);
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
+            }
+
+            return Json(_resultModel);
         }
 
         // GET: Customer/Edit/5
@@ -93,29 +142,41 @@ namespace bilihan_online.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,FirstName,LastName,FullName,MobileNumber,City,DateCreated,CreatedBy,Timestamp,UserID,IsActive")] CustomerModel customerModel)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,FirstName,LastName,FullName,MobileNumber,City,IsActive")] CustomerModel customerModel)
         {
             if (id != customerModel.ID)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            customerModel.FullName = string.Concat(customerModel.LastName, ", ", customerModel.FirstName);
+            if (CustomerModelExists(customerModel, "Edit"))
             {
                 try
                 {
-                    _context.Update(customerModel);
+                    
+                    _context.CustomerModel
+                        .Where(c => c.ID == customerModel.ID)
+                        .ExecuteUpdate(s => s
+                            .SetProperty(c => c.FirstName, customerModel.FirstName)
+                            .SetProperty(c => c.LastName, customerModel.LastName)
+                            .SetProperty(c => c.FullName, customerModel.FullName)
+                            .SetProperty(c => c.MobileNumber, customerModel.MobileNumber)
+                            .SetProperty(c => c.City, customerModel.City)
+                            .SetProperty(c => c.IsActive, customerModel.IsActive)
+                            .SetProperty(c => c.Timestamp, DateTime.Now)
+                            .SetProperty(c => c.UserID, DEFAULT_USER_ID));
                     await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    if (!CustomerModelExists(customerModel.ID))
+                    if (!CustomerModelExists(customerModel, "Edit"))
                     {
                         return NotFound();
                     }
                     else
                     {
-                        throw;
+                        throw ex;
                     }
                 }
                 return RedirectToAction(nameof(Index));
@@ -156,19 +217,35 @@ namespace bilihan_online.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CustomerModelExists(int id)
+        private bool CustomerModelExists(CustomerModel customerModel, string checkType)
         {
-            return _context.CustomerModel.Any(e => e.ID == id);
+            if (checkType.Equals("Create", StringComparison.OrdinalIgnoreCase))
+            {
+                return _context.CustomerModel.Any(e => (e.MobileNumber == customerModel.MobileNumber || e.FullName == customerModel.FullName));
+            }
+            else
+            {
+                return _context.CustomerModel.Any(e => e.ID == customerModel.ID || e.MobileNumber == customerModel.MobileNumber || e.FullName == customerModel.FullName);
+            }
         }
 
-        private bool CustomerModelExists(string fullName)
+        private CustomerModel GetCustomerModel(int id)
         {
-            return _context.CustomerModel.Any(e => e.FullName == fullName);
+
+            var customerModel = _context.CustomerModel
+        .FirstOrDefault(m => m.ID == id);
+
+            return customerModel;
         }
 
-        private bool CustomerModelExists(long mobileNumber)
+        public ResultModel UpdateResultModel(bool isSuccess, bool isListResult, object resultObject)
         {
-            return _context.CustomerModel.Any(e => e.MobileNumber == mobileNumber);
+            _resultModel.IsSuccess = isSuccess;
+            _resultModel.IsListResult = isListResult;
+            _resultModel.Result = resultObject;
+
+            return _resultModel;
         }
+
     }
 }

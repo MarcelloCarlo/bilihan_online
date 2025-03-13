@@ -4,7 +4,7 @@ using bilihanonline.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<bilihanonlineContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("bilihanonlineContext") ?? throw new InvalidOperationException("Connection string 'bilihanonlineContext' not found.")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("bilihanonlineContext") ?? throw new InvalidOperationException("Connection string 'bilihanonlineContext' not found.")).EnableSensitiveDataLogging());
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

@@ -7,7 +7,10 @@
 <h1>Customer</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    @* @Html.ActionLink("Create New Records", "Create") *@
+    <button id="btnCreate" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreateNew">
+        Create New
+    </button>
 </p>
 <table class="table">
     <thead>
@@ -28,26 +31,109 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.FullName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MobileNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.City)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsActive)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FullName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.MobileNumber)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.City)
+                </td>
+                <td>
+                    @(item.IsActive ? "True" : "False")
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
 
 
+<!-- Create Modal -->
+<div class="modal fade" id="modalCreateNew" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Create New</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form class="row">
+                            @Html.AntiForgeryToken()
+                            <div class="form-group">
+                                <label for="FirstName" class="control-label">First Name</label>
+                                <input id="FirstName" class="form-control" required />
+                                <span id="spanFirstName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="LastName" class="control-label">Last Name</label>
+                                <input id="LastName" class="form-control" required />
+                                <span id="spanLastName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="MobileNumber" class="control-label">Mobile Number</label>
+                                <input id="MobileNumber" class="form-control" required />
+                                <span id="spanMobileNumber" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="City" class="control-label">City</label>
+                                <input id="City" class="form-control" required />
+                                <span id="spanCity" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input id="IsActive" class="form-check-input" type="checkbox" />
+                                    <label for="IsActive" class="form-check-label">Is Active</label>
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnSubmit" data-bs-toggle="modal" data-bs-target="#confirmationModal">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="modalCreateNew" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Edit</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Understood</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        var customerID = "";
+        var pageName = "";
+        var submitFormURL = "";
+    </script>
+    <script src="~/js/pages/customer.js" asp-append-version="true"></script>
+}

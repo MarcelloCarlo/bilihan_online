@@ -23,9 +23,9 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Customer" asp-action="Index">Customers</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="SKU" asp-action="Index">Products</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="SKU" asp-action="Index">SKU</a>
                         </li>
-                                                <li class="nav-item">
+                        <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="PurchaseOrder" asp-action="Index">Orders</a>
                         </li>
                     </ul>
@@ -37,6 +37,39 @@
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
+
+        <!--Confirmation Modal -->
+        <div class="modal fade" id="confirmationModal" data-bs-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel">Confirmation</h5>
+                    </div>
+                    <div class="modal-body" id="modalContent">
+                    </div>
+                    <div class="modal-footer" id="modalFooter">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                        <button type="button" class="btn btn-primary" id="btnConfirm">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Message Modal -->
+        <div class="modal fade" id="messageModal" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel">Confirmation</h5>
+                    </div>
+                    <div class="modal-body" id="modalContent">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <footer class="border-top footer text-muted">

@@ -4,7 +4,7 @@ $(document).ready(function () {
     var successMessage = "";
     var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
 
-    var MedicationObjectTask = {
+    var CustomerObjectTask = {
 
         init: function () {
             var self = this;
@@ -21,9 +21,12 @@ $(document).ready(function () {
             self.$btnDelete = $('a[id^="btnDelete"]');
             self.$btnConfirm = $("#btnConfirm");
             self.$btnClear = $("#btnClear");
-            self.$txtDosage = $("#txtDosage");
-            self.$txtDrug = $("#txtDrug");
-            self.$txtPatients = $("#txtPatients");
+
+            self.$FirstName = $("#FirstName");
+            self.$LastName = $("#LastName");
+            self.$MobileNumber = $("#MobileNumber");
+            self.$City = $("#City");
+            self.$IsActive = $("#IsActive");
 
             switch (pageName) {
                 case "Create":
@@ -51,9 +54,11 @@ $(document).ready(function () {
             var self = this;
 
             self.$btnClear.on('click', function () {
-                self.$txtDosage.val('');
-                self.$txtDrug.val('');
-                self.$txtPatients.val('');
+                self.$FirstName.val('');
+                self.$LastName.val('');
+                self.$MobileNumber.val('');
+                self.$City.val('');
+                self.$IsActive.val('false');
             });
 
             //Submit action
@@ -64,10 +69,12 @@ $(document).ready(function () {
                 self.$btnConfirm.on('click', function () {
 
                     var inputVal = {
-                        Id: (patientId == '' || patientId == null ? '0' : patientId),
-                        Dosage: self.$txtDosage.val().trim(),
-                        Drug: self.$txtDrug.val().trim(),
-                        Patients: self.$txtPatients.val().trim()
+                        Id: (customerID == '' || customerID == null ? '0' : customerID),
+                        FirstName: self.$FirstName.val().trim(),
+                        LastName: self.$LastName.val().trim(),
+                        MobileNumber: self.$MobileNumber.val().trim(),
+                        City: self.$City.val().trim(),
+                        IsActive: self.$IsActive.val()
                     };
 
                     self.setAjaxSendEvent(inputVal);
@@ -75,6 +82,7 @@ $(document).ready(function () {
                 });
 
             });
+
         },
         setAjaxSendEvent: function (inputVal) {
             var self = this;
@@ -98,7 +106,7 @@ $(document).ready(function () {
 
                         $("#btnClose").click(function () {
                             setTimeout(function () {
-                                window.location.replace("/Medication");
+                                window.location.replace("/Customer");
                             }, 1000);
                         });
 
@@ -117,7 +125,7 @@ $(document).ready(function () {
 
                             $("#btnClose").click(function () {
                                 setTimeout(function () {
-                                    window.location.replace("/Medication");
+                                    window.location.replace("/Customer");
                                 }, 1000);
                             });
                         }
@@ -130,7 +138,7 @@ $(document).ready(function () {
 
                             $("#btnClose").click(function () {
                                 setTimeout(function () {
-                                    window.location.replace("/Medication");
+                                    window.location.replace("/Customer");
                                 }, 1000);
                             });
                         }
@@ -144,7 +152,7 @@ $(document).ready(function () {
 
                     $("#btnClose").click(function () {
                         setTimeout(function () {
-                            window.location.replace("/Medication");
+                            window.location.replace("/Customer");
                         }, 1000);
                     });
                 },
@@ -152,12 +160,12 @@ $(document).ready(function () {
         }
     }
 
-    var InitialiseMedicationObjectTask = function () {
-        var medicationObjectTask = Object.create(MedicationObjectTask);
-        medicationObjectTask.init();
+    var InitialiseCustomerObjectTask = function () {
+        var customerObjectTask = Object.create(CustomerObjectTask);
+        customerObjectTask.init();
     }
 
-    InitialiseMedicationObjectTask();
+    InitialiseCustomerObjectTask();
 
 });
 
@@ -201,10 +209,12 @@ $(function () {
         $("#btnConfirm").click(function () {
 
             var inputVal = {
-                Id: (patientId == '' || patientId == null ? '0' : patientId),
-                Dosage: $("#txtDosage").val().trim(),
-                Drug: $("#txtDrug").val().trim(),
-                Patients: $("#txtPatients").val().trim()
+                Id: (customerID == '' || customerID == null ? '0' : customerID),
+                FirstName: $("#FirstName").val().trim(),
+                LastName: $("#LastName").val().trim(),
+                MobileNumber: $("#MobileNumber").val().trim(),
+                City: $("#City").val().trim(),
+                IsActive: $("#IsActive").val()
             };
 
             $.ajax({
@@ -224,7 +234,7 @@ $(function () {
 
                         $("#btnClose").click(function () {
                             setTimeout(function () {
-                                window.location.replace("/Medication");
+                                window.location.replace("/Customer");
                             }, 1000);
                         });
 
@@ -243,7 +253,7 @@ $(function () {
 
                             $("#btnClose").click(function () {
                                 setTimeout(function () {
-                                    window.location.replace("/Medication");
+                                    window.location.replace("/Customer");
                                 }, 1000);
                             });
                         }
@@ -256,7 +266,7 @@ $(function () {
 
                             $("#btnClose").click(function () {
                                 setTimeout(function () {
-                                    window.location.replace("/Medication");
+                                    window.location.replace("/Customer");
                                 }, 1000);
                             });
                         }
@@ -270,7 +280,7 @@ $(function () {
 
                     $("#btnClose").click(function () {
                         setTimeout(function () {
-                            window.location.replace("/Medication");
+                            window.location.replace("/Customer");
                         }, 1000);
                     });
                 },
@@ -306,7 +316,7 @@ $(function () {
 
                         $("#btnClose").click(function () {
                             setTimeout(function () {
-                                window.location.replace("/Medication");
+                                window.location.replace("/Customer");
                             }, 1000);
                         });
 
@@ -325,7 +335,7 @@ $(function () {
 
                             $("#btnClose").click(function () {
                                 setTimeout(function () {
-                                    window.location.replace("/Medication");
+                                    window.location.replace("/Customer");
                                 }, 1000);
                             });
                         }
@@ -338,7 +348,7 @@ $(function () {
 
                             $("#btnClose").click(function () {
                                 setTimeout(function () {
-                                    window.location.replace("/Medication");
+                                    window.location.replace("/Customer");
                                 }, 1000);
                             });
                         }
@@ -352,7 +362,7 @@ $(function () {
 
                     $("#btnClose").click(function () {
                         setTimeout(function () {
-                            window.location.replace("/Medication");
+                            window.location.replace("/Customer");
                         }, 1000);
                     });
                 },
@@ -368,7 +378,10 @@ $(function () {
         $("#txtPatients").val('');
     });
 
-
+    $("#btnCreate").on('click', function () {
+        pageName = "Create";
+        submitFormURL = "~/Customer/JsonCreate";
+    });
 });
 
 function FormValidation() {
