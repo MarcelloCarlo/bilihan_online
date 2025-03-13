@@ -66,6 +66,7 @@ $(document).ready(function () {
                 //If the inputs are valid
                 //proceed to btnConfirm action
                 //else, throw an error
+                self.declaration();
                 self.$btnConfirm.on('click', function () {
 
                     var inputVal = {
