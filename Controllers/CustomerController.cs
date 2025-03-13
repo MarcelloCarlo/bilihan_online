@@ -28,65 +28,12 @@ namespace bilihan_online.Controllers
             return View(await _context.CustomerModel.ToListAsync());
         }
 
-        // GET: Customer/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var customerModel = await _context.CustomerModel
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (customerModel == null)
-            {
-                return NotFound();
-            }
-
-            return View(customerModel);
-        }
-
-        // GET: Customer/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
         // POST: Customer/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,FullName,MobileNumber,City,IsActive")] CustomerModel customerModel)
-        {
-            try
-            {
-                customerModel.FullName = string.Concat(customerModel.LastName, ", ", customerModel.FirstName);
-
-                if (!CustomerModelExists(customerModel, "Create"))
-                {
-                    customerModel.DateCreated = DateTime.Now;
-                    customerModel.CreatedBy = DEFAULT_USER_ID;
-                    customerModel.Timestamp = DateTime.Now;
-                    customerModel.UserID = DEFAULT_USER_ID;
-                    _context.Add(customerModel);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                return View(customerModel);
-            }
-            catch (Exception ex)
-            {
-
-                throw ex;
-            }
-
-        }
-
-        [HttpPost]
-        [RequireHttps]
-        [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonCreate([Bind("FirstName,LastName,MobileNumber,City,IsActive")] CustomerModel customer)
+        public async Task<JsonResult> JsonCreate(CustomerModel customer)
         {
             try
             {
@@ -99,7 +46,7 @@ namespace bilihan_online.Controllers
                     customer.Timestamp = DateTime.Now;
                     customer.UserID = DEFAULT_USER_ID;
                     _context.Add(customer);
-                    _resultModel.ItemsGenerated =  await _context.SaveChangesAsync();
+                    _resultModel.ItemsGenerated = await _context.SaveChangesAsync();
 
                     if (_resultModel.ItemsGenerated < 1)
                     {
@@ -137,6 +84,39 @@ namespace bilihan_online.Controllers
             return View(customerModel);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> JsonDetails(int? id)
+        {
+            try
+            {
+                if (id != null)
+                {
+                    var customerModel = await _context.CustomerModel.FindAsync(id);
+                    if (customerModel != null)
+                    {
+                        UpdateResultModel(true, false, customerModel);
+                    }
+                    else
+                    {
+                        UpdateResultModel(false, false, "No Customer Found.");
+                    }
+                }
+                else
+                {
+                    UpdateResultModel(false, false, "Not A Valid ID.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
+            }
+
+            return Json(_resultModel);
+        }
+        
         // POST: Customer/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -154,7 +134,7 @@ namespace bilihan_online.Controllers
             {
                 try
                 {
-                    
+
                     _context.CustomerModel
                         .Where(c => c.ID == customerModel.ID)
                         .ExecuteUpdate(s => s
@@ -184,48 +164,71 @@ namespace bilihan_online.Controllers
             return View(customerModel);
         }
 
-        // GET: Customer/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var customerModel = await _context.CustomerModel
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (customerModel == null)
-            {
-                return NotFound();
-            }
-
-            return View(customerModel);
-        }
-
-        // POST: Customer/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<JsonResult> JsonEdit(CustomerModel customer)
         {
-            var customerModel = await _context.CustomerModel.FindAsync(id);
-            if (customerModel != null)
+            try
             {
-                _context.CustomerModel.Remove(customerModel);
+                customer.FullName = string.Concat(customer.LastName, ", ", customer.FirstName);
+
+                if (CustomerModelExists(customer, "Edit"))
+                {
+                    if (!CustomerModelExists(customer, "Duplicate"))
+                    {
+                        _context.CustomerModel
+                             .Where(c => c.ID == customer.ID)
+                             .ExecuteUpdate(s => s
+                                 .SetProperty(c => c.FirstName, customer.FirstName)
+                                 .SetProperty(c => c.LastName, customer.LastName)
+                                 .SetProperty(c => c.FullName, customer.FullName)
+                                 .SetProperty(c => c.MobileNumber, customer.MobileNumber)
+                                 .SetProperty(c => c.City, customer.City)
+                                 .SetProperty(c => c.IsActive, customer.IsActive)
+                                 .SetProperty(c => c.Timestamp, DateTime.Now)
+                                 .SetProperty(c => c.UserID, DEFAULT_USER_ID));
+
+                        await _context.SaveChangesAsync();
+
+                        UpdateResultModel(true, false, "Edit Success.");
+
+                    }
+                    else
+                    {
+                        UpdateResultModel(false, false, "Full Name/Mobile Number Already Exists on Other Records.");
+                    }
+
+                }
+                else
+                {
+                    UpdateResultModel(false, false, "Customer Doesn't Exist");
+                }
+                //return View(customerModel);
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return Json(_resultModel);
         }
 
         private bool CustomerModelExists(CustomerModel customerModel, string checkType)
         {
             if (checkType.Equals("Create", StringComparison.OrdinalIgnoreCase))
             {
-                return _context.CustomerModel.Any(e => (e.MobileNumber == customerModel.MobileNumber || e.FullName == customerModel.FullName));
+                return _context.CustomerModel.Any(e => e.MobileNumber == customerModel.MobileNumber || e.FullName == customerModel.FullName);
+            }
+            else if (checkType.Equals("Edit", StringComparison.OrdinalIgnoreCase))
+            {
+                return _context.CustomerModel.Any(e => e.ID == customerModel.ID);
+
+                //ID should exists but its FullName and MobileNumber should not be exists on other records
             }
             else
             {
-                return _context.CustomerModel.Any(e => e.ID == customerModel.ID || e.MobileNumber == customerModel.MobileNumber || e.FullName == customerModel.FullName);
+                return _context.CustomerModel.Any(e => e.ID != customerModel.ID && (e.MobileNumber == customerModel.MobileNumber || e.FullName == customerModel.FullName));
             }
         }
 
