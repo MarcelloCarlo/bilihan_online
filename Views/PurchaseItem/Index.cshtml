@@ -1,13 +1,54 @@
 @model IEnumerable<bilihan_online.Models.PurchaseItemModel>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Order Taking";
 }
 
-<h1>Index</h1>
+<h1>Order Taking</h1>
+<div class="row col-md-12">
+    <div class="col-md-9">
+        <form id="GetCustomerForm">
+            @Html.AntiForgeryToken()
+            <div class="row mb-3">
+                <label for="Customer" class="col-sm-2 col-form-label">Customer</label>
+                <div class="col-sm-10">
+                    <select id="Customer" class="form-control selectpicker" type="search" placeholder="Search" aria-label="Search" data-live-search="true" required>
+                        <option selected value=""></option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <span id="spanCustomer" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="DeliveryDate" class="col-sm-2 col-form-label">Delivery Date</label>
+                <div class="col-sm-10">
+                    <input id="DeliveryDate" class="form-control" data-provide="datepicker" required />
+                </div>
+                <div class="col-auto">
+                    <span id="spanDeliveryDate" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="Status" class="col-sm-2 col-form-label">Status</label>
+                <div class="col-sm-10">
+                    <select id="Status" class="form-select">
+                        <option selected value="New">New</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <span id="spanStatus" class="text-danger"></span>
+                </div>
 
+            </div>
+        </form>
+    </div>
+
+</div>
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Add Item</a>
 </p>
 <table class="table">
     <thead>
@@ -28,26 +69,41 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Quantity)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Timestamp)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UserID)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Quantity)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Timestamp)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UserID)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+
+
+@section Scripts {
+    <script>
+        var addActionURL = '@Url.Action("JsonCreate")';
+        var editActionURL = '@Url.Action("JsonEdit")';
+        var customerSearchURL = '@Url.Action("JsonGetCustomer")';
+        var productSearchURL = '@Url.Action("JsonGetProduct")';
+        var customerID = "";
+        var productID = "";
+    </script>
+    <script src="~/js/pages/purchaseitem.js" asp-append-version="true"></script>
+}

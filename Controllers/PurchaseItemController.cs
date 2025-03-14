@@ -13,6 +13,8 @@ namespace bilihan_online.Controllers
     public class PurchaseItemController : Controller
     {
         private readonly bilihanonlineContext _context;
+        private readonly string DEFAULT_USER_ID = "Admin";
+        private readonly ResultModel _resultModel = new ResultModel();
 
         public PurchaseItemController(bilihanonlineContext context)
         {
@@ -149,9 +151,51 @@ namespace bilihan_online.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> JsonGetCustomer(string? name)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    var customerModel = await _context.CustomerModel.Where(c => c.FullName.Contains(name)).AsQueryable().ToListAsync();
+                    if (customerModel != null)
+                    {
+                        UpdateResultModel(true, false, customerModel);
+                    }
+                    else
+                    {
+                        UpdateResultModel(false, false, "No Customer Found.");
+                    }
+                }
+                else
+                {
+                    UpdateResultModel(false, false, "No Customer Found.");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
+            }
+
+            return Json(_resultModel);
+        }
+
         private bool PurchaseItemModelExists(int id)
         {
             return _context.PurchaseItemModel.Any(e => e.ID == id);
+        }
+
+        public ResultModel UpdateResultModel(bool isSuccess, bool isListResult, object resultObject)
+        {
+            _resultModel.IsSuccess = isSuccess;
+            _resultModel.IsListResult = isListResult;
+            _resultModel.Result = resultObject;
+
+            return _resultModel;
         }
     }
 }
