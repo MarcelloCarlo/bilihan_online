@@ -67,23 +67,7 @@ namespace bilihan_online.Controllers
 
             return Json(_resultModel);
         }
-
-        // GET: Customer/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var customerModel = await _context.CustomerModel.FindAsync(id);
-            if (customerModel == null)
-            {
-                return NotFound();
-            }
-            return View(customerModel);
-        }
-
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<JsonResult> JsonDetails(int? id)
@@ -117,53 +101,6 @@ namespace bilihan_online.Controllers
             return Json(_resultModel);
         }
         
-        // POST: Customer/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,FirstName,LastName,FullName,MobileNumber,City,IsActive")] CustomerModel customerModel)
-        {
-            if (id != customerModel.ID)
-            {
-                return NotFound();
-            }
-
-            customerModel.FullName = string.Concat(customerModel.LastName, ", ", customerModel.FirstName);
-            if (CustomerModelExists(customerModel, "Edit"))
-            {
-                try
-                {
-
-                    _context.CustomerModel
-                        .Where(c => c.ID == customerModel.ID)
-                        .ExecuteUpdate(s => s
-                            .SetProperty(c => c.FirstName, customerModel.FirstName)
-                            .SetProperty(c => c.LastName, customerModel.LastName)
-                            .SetProperty(c => c.FullName, customerModel.FullName)
-                            .SetProperty(c => c.MobileNumber, customerModel.MobileNumber)
-                            .SetProperty(c => c.City, customerModel.City)
-                            .SetProperty(c => c.IsActive, customerModel.IsActive)
-                            .SetProperty(c => c.Timestamp, DateTime.Now)
-                            .SetProperty(c => c.UserID, DEFAULT_USER_ID));
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException ex)
-                {
-                    if (!CustomerModelExists(customerModel, "Edit"))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw ex;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(customerModel);
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<JsonResult> JsonEdit(CustomerModel customer)

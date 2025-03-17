@@ -27,128 +27,116 @@ namespace bilihan_online.Controllers
             return View(await _context.PurchaseItemModel.ToListAsync());
         }
 
-        // GET: PurchaseItem/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var purchaseItemModel = await _context.PurchaseItemModel
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (purchaseItemModel == null)
-            {
-                return NotFound();
-            }
-
-            return View(purchaseItemModel);
-        }
-
         // GET: PurchaseItem/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: PurchaseItem/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Quantity,Price,Timestamp,UserID")] PurchaseItemModel purchaseItemModel)
+        public async Task<IActionResult> JsonCreate(PurchaseOrderModel purchaseOrderModel, PurchaseItemModel purchaseItemModel)
         {
-            if (ModelState.IsValid)
+            try
             {
-                _context.Add(purchaseItemModel);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(purchaseItemModel);
-        }
-
-        // GET: PurchaseItem/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var purchaseItemModel = await _context.PurchaseItemModel.FindAsync(id);
-            if (purchaseItemModel == null)
-            {
-                return NotFound();
-            }
-            return View(purchaseItemModel);
-        }
-
-        // POST: PurchaseItem/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Quantity,Price,Timestamp,UserID")] PurchaseItemModel purchaseItemModel)
-        {
-            if (id != purchaseItemModel.ID)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
+                if (purchaseOrderModel.ID == 0)
                 {
-                    _context.Update(purchaseItemModel);
+                    purchaseOrderModel.DateCreated = DateTime.Now;
+                    purchaseOrderModel.CreatedBy = DEFAULT_USER_ID;
+                    purchaseOrderModel.Timestamp = DateTime.Now;
+                    purchaseOrderModel.UserID = DEFAULT_USER_ID;
+
+                    _context.Add(purchaseOrderModel);
                     await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PurchaseItemModelExists(purchaseItemModel.ID))
+
+                    int purchaseOrderID = purchaseOrderModel.ID;
+
+                    if (purchaseOrderID >= 1)
                     {
-                        return NotFound();
+                        purchaseItemModel.Timestamp = DateTime.Now;
+                        purchaseItemModel.UserID = DEFAULT_USER_ID;
+
+                        purchaseItemModel.PurchaseOrderID = purchaseOrderModel;
+                        _context.Add(purchaseItemModel);
+                        await _context.SaveChangesAsync();
+
+                        _resultModel.Result = purchaseOrderModel;
                     }
                     else
                     {
-                        throw;
+                        UpdateResultModel(false, false, "Order saving failed");
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                else
+                {
+                    var purchaseItemCheck = _context.PurchaseItemModel.SingleOrDefaultAsync(pi => pi.PurchaseOrderID == purchaseOrderModel && pi.SKUID == purchaseItemModel.SKUID);
+
+                    if (purchaseItemCheck == null)
+                    {
+                        purchaseItemModel.PurchaseOrderID = purchaseOrderModel;
+                        _context.Add(purchaseItemModel);
+                        _context.PurchaseOrderModel
+                            .Where(po => po.ID == purchaseItemModel.ID)
+                                .ExecuteUpdate(s => s
+                                    .SetProperty(po => po.AmountDue, purchaseOrderModel.AmountDue)
+                                    .SetProperty(po => po.Timestamp, DateTime.Now)
+                                    .SetProperty(po => po.UserID, DEFAULT_USER_ID));
+
+                        await _context.SaveChangesAsync();
+
+                        _resultModel.Result = purchaseOrderModel;
+                    }
+                    else
+                    {
+                        UpdateResultModel(false, false, "Item already exists on the order");
+                    }
+
+                }
             }
-            return View(purchaseItemModel);
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
+            }
+
+            return Json(_resultModel);
         }
 
-        // GET: PurchaseItem/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var purchaseItemModel = await _context.PurchaseItemModel
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (purchaseItemModel == null)
-            {
-                return NotFound();
-            }
-
-            return View(purchaseItemModel);
-        }
-
-        // POST: PurchaseItem/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<JsonResult> JsonEdit(PurchaseItemModel purchaseItemModel)
         {
-            var purchaseItemModel = await _context.PurchaseItemModel.FindAsync(id);
-            if (purchaseItemModel != null)
+            try
             {
-                _context.PurchaseItemModel.Remove(purchaseItemModel);
-            }
+                _context.PurchaseItemModel
+                .Where(pi => pi.ID == purchaseItemModel.ID)
+                    .ExecuteUpdate(u => u
+                        .SetProperty(pi => pi.Quantity, purchaseItemModel.Quantity)
+                        .SetProperty(pi => pi.Price, purchaseItemModel.Price)
+                        .SetProperty(pi => pi.Timestamp, DateTime.Now)
+                        .SetProperty(pi => pi.UserID, DEFAULT_USER_ID)
+                        );
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+                var orderToBeComputed = _context.PurchaseOrderModel.Find(purchaseItemModel.PurchaseOrderID);
+
+                if (orderToBeComputed != null)
+                {
+                    orderToBeComputed.AmountDue += purchaseItemModel.Price;
+                    _context.PurchaseOrderModel.Update(orderToBeComputed);
+                }
+
+                await _context.SaveChangesAsync();
+
+                _resultModel.Result = purchaseItemModel;
+
+                UpdateResultModel(true, false, "Edit Success.");
+            }
+            catch (System.Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
+            }
+            return Json(_resultModel);
         }
 
         [HttpPost]
@@ -184,9 +172,32 @@ namespace bilihan_online.Controllers
             return Json(_resultModel);
         }
 
-        private bool PurchaseItemModelExists(int id)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> JsonUpdateOrderStatus(PurchaseOrderModel purchaseOrderModel)
         {
-            return _context.PurchaseItemModel.Any(e => e.ID == id);
+            try
+            {
+
+                _context.PurchaseOrderModel
+                    .Where(po => po.ID == purchaseOrderModel.ID)
+                        .ExecuteUpdate(s => s
+                            .SetProperty(po => po.Status, purchaseOrderModel.Status)
+                            .SetProperty(po => po.Timestamp, DateTime.Now)
+                            .SetProperty(po => po.UserID, DEFAULT_USER_ID));
+
+                await _context.SaveChangesAsync();
+                _resultModel.Result = purchaseOrderModel;
+                UpdateResultModel(true, false, "Updated");
+
+            }
+            catch (System.Exception ex)
+            {
+                UpdateResultModel(true, false, ex);
+                throw;
+            }
+
+            return Json(_resultModel);
         }
 
         public ResultModel UpdateResultModel(bool isSuccess, bool isListResult, object resultObject)

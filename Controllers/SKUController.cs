@@ -14,6 +14,8 @@ namespace bilihan_online.Controllers
     {
         private readonly bilihanonlineContext _context;
         private readonly string DEFAULT_USER_ID = "Admin";
+        private readonly ResultModel _resultModel = new ResultModel();
+
 
         public SKUController(bilihanonlineContext context)
         {
@@ -24,7 +26,8 @@ namespace bilihan_online.Controllers
         public async Task<IActionResult> Index()
         {
 
-            return View(await _context.SKUModel.Select(s => new SKUModel{
+            return View(await _context.SKUModel.Select(s => new SKUModel
+            {
                 ID = s.ID,
                 Name = s.Name,
                 Code = s.Code,
@@ -85,6 +88,7 @@ namespace bilihan_online.Controllers
                     }
 
                 }
+
                 sKUModel.DateCreated = DateTime.Now;
                 sKUModel.CreatedBy = DEFAULT_USER_ID;
                 sKUModel.Timestamp = DateTime.Now;
@@ -94,6 +98,60 @@ namespace bilihan_online.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(sKUModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> JsonCreate(SKUModel sKUModel)
+        {
+            try
+            {
+                if (!SKUModelExists(sKUModel))
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        sKUModel.ProductImageHolder.OpenReadStream().CopyTo(memoryStream);
+
+                        if (memoryStream.Length < 2097152)
+                        {
+                            sKUModel.ProductImage = memoryStream.ToArray();
+                        }
+                        else
+                        {
+                            UpdateResultModel(false, false, "File is more than 2MB.");
+                        }
+
+                    }
+
+                    sKUModel.DateCreated = DateTime.Now;
+                    sKUModel.CreatedBy = DEFAULT_USER_ID;
+                    sKUModel.Timestamp = DateTime.Now;
+                    sKUModel.UserID = DEFAULT_USER_ID;
+                    _context.Add(sKUModel);
+
+                    _resultModel.ItemsGenerated = await _context.SaveChangesAsync();
+
+                    if (_resultModel.ItemsGenerated < 1)
+                    {
+                        UpdateResultModel(false, false, "Creation failed.");
+                    }
+                    else
+                    {
+                        UpdateResultModel(true, false, "Creation success.");
+                    }
+                }
+                else
+                {
+                    UpdateResultModel(false, false, "Product Name/SKU already exists.");
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
+            }
+
+            return Json(_resultModel);
         }
 
         // GET: SKU/Edit/5
@@ -111,6 +169,7 @@ namespace bilihan_online.Controllers
             }
             return View(sKUModel);
         }
+
 
         // POST: SKU/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -147,37 +206,50 @@ namespace bilihan_online.Controllers
             return View(sKUModel);
         }
 
-        // GET: SKU/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var sKUModel = await _context.SKUModel
-                .FirstOrDefaultAsync(m => m.ID == id);
-            if (sKUModel == null)
-            {
-                return NotFound();
-            }
-
-            return View(sKUModel);
-        }
-
-        // POST: SKU/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<JsonResult> JsonEdit(SKUModel sKUModel)
         {
-            var sKUModel = await _context.SKUModel.FindAsync(id);
-            if (sKUModel != null)
+            try
             {
-                _context.SKUModel.Remove(sKUModel);
+                if (SKUModelExists(sKUModel.ID))
+                {
+                    if (!SKUModelExists(sKUModel))
+                    {
+                        _context.SKUModel
+                             .Where(sk => sk.ID == sKUModel.ID)
+                             .ExecuteUpdate(s => s
+                                 .SetProperty(sk => sk.Name, sKUModel.Name)
+                                 .SetProperty(sk => sk.Code, sKUModel.Code)
+                                 .SetProperty(sk => sk.UnitPrice, sKUModel.UnitPrice)
+                                 .SetProperty(sk => sk.IsActive, sKUModel.IsActive)
+                                 .SetProperty(sk => sk.Timestamp, DateTime.Now)
+                                 .SetProperty(sk => sk.UserID, DEFAULT_USER_ID));
+
+                        await _context.SaveChangesAsync();
+
+                        UpdateResultModel(true, false, "Edit Success.");
+
+                    }
+                    else
+                    {
+                        UpdateResultModel(false, false, "Product Name/SKU Already Exists on Other Records.");
+                    }
+
+                }
+                else
+                {
+                    UpdateResultModel(false, false, "Customer Doesn't Exist");
+                }
+                //return View(customerModel);
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+                throw ex;
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return Json(_resultModel);
         }
 
         private bool SKUModelExists(int id)
@@ -187,7 +259,16 @@ namespace bilihan_online.Controllers
 
         private bool SKUModelExists(SKUModel skuModel)
         {
-            return _context.SKUModel.Any(e => (e.Code == skuModel.Code || e.Name == skuModel.Name));
+            return _context.SKUModel.Any(e => e.ID != skuModel.ID && (e.Code == skuModel.Code || e.Name == skuModel.Name));
+        }
+
+        public ResultModel UpdateResultModel(bool isSuccess, bool isListResult, object resultObject)
+        {
+            _resultModel.IsSuccess = isSuccess;
+            _resultModel.IsListResult = isListResult;
+            _resultModel.Result = resultObject;
+
+            return _resultModel;
         }
     }
 }
