@@ -48,7 +48,8 @@
                     @(item.IsActive ? "True" : "False")
                 </td>
                 <td>
-                    <a href='#' id='btnEdit"@item.ID"' type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
+                    @{var btnEdit = "btnEdit" + item.ID; }
+                    <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
                         value="@item.ID">Edit</a>
                 </td>
             </tr>

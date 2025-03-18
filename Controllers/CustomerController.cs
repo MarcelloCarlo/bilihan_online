@@ -62,12 +62,11 @@ namespace bilihan_online.Controllers
             catch (Exception ex)
             {
                 UpdateResultModel(false, false, ex);
-                throw ex;
             }
 
             return Json(_resultModel);
         }
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<JsonResult> JsonDetails(int? id)
@@ -95,12 +94,11 @@ namespace bilihan_online.Controllers
             catch (Exception ex)
             {
                 UpdateResultModel(false, false, ex);
-                throw ex;
             }
 
             return Json(_resultModel);
         }
-        
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<JsonResult> JsonEdit(CustomerModel customer)
@@ -145,7 +143,6 @@ namespace bilihan_online.Controllers
             catch (Exception ex)
             {
                 UpdateResultModel(false, false, ex);
-                throw ex;
             }
 
             return Json(_resultModel);

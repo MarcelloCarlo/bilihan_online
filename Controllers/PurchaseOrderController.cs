@@ -28,7 +28,7 @@ namespace bilihan_online.Controllers
         // GET: PurchaseOrder/Create
         public IActionResult Create()
         {
-            return RedirectToAction("Index", "PurchaseItem", new { area = "Admin" });
+            return RedirectToAction("Index", "PurchaseItem", new { area = "Create" });
             //return View();
         }
 

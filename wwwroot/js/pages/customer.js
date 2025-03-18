@@ -219,7 +219,7 @@ $(function () {
     var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
 
     $('a[id^="btnEdit"]').click(function () {
-
+        debugger;
         pageName = "Edit";
         submitFormURL = editActionURL;
         customerID = $(this).attr('value');

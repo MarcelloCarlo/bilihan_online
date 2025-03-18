@@ -1,4 +1,6 @@
 var customerID = "";
+var orderID = "";
+var skuID = "";
 var pageName = "";
 var submitFormURL = "";
 
@@ -24,13 +26,19 @@ $(document).ready(function () {
             self.$btnSubmit = $("#btnSubmit");
             self.$btnEdtSubmit = $("#btnEdtSubmit");
             self.$btnConfirm = $("#btnConfirm");
-            self.$btnClear = $("#btnClear");
+            self.$btnCreate = $("#btnCreate");
+            self.$customerSearchResult = $("#customerSearchResult");
+            self.$searchDiv = $("#searchDiv");
+            self.$productSearchResult = $("#productSearchResult");
+            self.$searchSKUDiv = $("#searchSKUDiv");
 
             self.$Customer = $("#Customer");
             self.$DeliveryDate = $("#DeliveryDate");
             self.$Status = $("#Status");
 
-            self.$Customer.selectpicker('refresh');
+            self.$SKUName = $("#SKUName");
+            self.$Quantity = $("#Quantity");
+            self.$SubTotal = $("#SubTotal");
 
             switch (pageName) {
                 case "Create":
@@ -66,6 +74,17 @@ $(document).ready(function () {
         },
         setEvent: function () {
             var self = this;
+
+            self.$btnCreate.on('click', function () {
+                self.$SKUName.val('');
+                self.$Quantity.val('');
+                self.$SubTotal.val('');
+
+                skuID = "";
+
+                pageName = "Create";
+                submitFormURL = addActionURL;
+            });
 
             //Submit action
             self.$btnSubmit.on('click', function () {
@@ -124,12 +143,66 @@ $(document).ready(function () {
 
             });
 
-            self.$Customer.on('keyup', function () {
-                submitFormURL = customerSearchURL;
-                var form_data = new FormData();
-                form_data.append("name", self.$Customer.val().trim())
-                self.setAjaxSearch(form_data);
+            self.$Customer.on('keyup change', function () {
+                if (self.$Customer.val() >= 0) {
+                    self.$searchDiv.collapse('hide');
+                }
+                else {
+                    submitFormURL = customerSearchURL;
+                    self.$searchDiv.collapse('show');
+                    var form_data = new FormData();
+                    form_data.append("name", self.$Customer.val().trim())
+                    self.setAjaxSearchCustomer(form_data)
+                }
+                ;
             });
+
+            self.$customerSearchResult.on('click', '.list-group-item', function () {
+                //var bubble = self.$customerSearchResult;
+                customerID = $(this).attr('value').trim();
+
+                var custName = $(this).children(".badge").attr('value').trim();
+                self.$Customer.val(custName);
+
+                self.$searchDiv.collapse('hide');
+
+                self.$customerSearchResult.html('');
+            });
+
+            self.$SKUName.on('keyup change', function () {
+                if (self.$SKUName.val() >= 0) {
+                    self.$searchSKUDiv.collapse('hide');
+                }
+                else {
+                    submitFormURL = productSearchURL;
+                    self.$searchSKUDiv.collapse('show');
+                    var form_data = new FormData();
+                    form_data.append("product", self.$SKUName.val().trim())
+                    self.setAjaxSearchSKU(form_data);
+                }
+            });
+
+            self.$productSearchResult.on('click', '.list-group-item', function () {
+
+                //var bubble = self.$customerSearchResult;
+                skuID = $(this).attr('value').trim();
+
+                var productName = $(this).children(".justify-content-between").attr('value').trim();
+                var unitPrice = $(this).children(".unit-price").attr('value').trim();
+                self.$SKUName.val(productName);
+                self.$Quantity.val("1");
+                self.$SubTotal.val(unitPrice);
+
+                self.$searchSKUDiv.collapse('hide');
+
+                self.$productSearchResult.html('');
+            });
+
+            self.$DeliveryDate.datepicker({
+                format: 'dd/mm/yyyy',
+                startDate: '0d'
+            });
+
         },
         setAjaxSendEvent: function (inputVal) {
             var self = this;
@@ -206,7 +279,7 @@ $(document).ready(function () {
                 },
             });
         },
-        setAjaxSearch: function (inputVal) {
+        setAjaxSearchCustomer: function (inputVal) {
             var self = this;
 
             headers['RequestVerificationToken'] = self.$Token.val();
@@ -220,14 +293,12 @@ $(document).ready(function () {
                 processData: false,
                 success: function (data) {
                     if (data.isSuccess) {
-                        debugger;
 
-                        self.$Customer.find('option').remove();
-                        $.each(data.result,function(key, value)
-                        { debugger;
-                            self.$Customer.append('<option value=' + key + '>' + value + '</option>'); // return empty
+                        self.$customerSearchResult.html('');
+
+                        $.each(data.result, function (key, value) {
+                            self.$customerSearchResult.append('<a type="button" class="list-group-item d-flex justify-content-between align-items-center" id="selectedCustomer' + value.id + '" value="' + value.id + '">' + value.fullName + '<span class="badge bg-primary rounded-pill" value="' + value.fullName + '">' + value.mobileNumber + '</span> </a>'); // return empty
                         });
-                        //self.$Customer.val(data.result.)
 
                     } else {
                         if (data.isListResult) {
@@ -255,7 +326,78 @@ $(document).ready(function () {
                             $("#modalContent").html('');
                             $("#modalContent").append('<label> Error: ' + data.result + '</label>');
 
+                            $("#btnClose").on('click', function () {
+                                setTimeout(function () {
+                                    window.location.replace("/Customer");
+                                }, 1000);
+                            });
+                        }
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    $("#modalFooter").html('')
+                    $("#modalFooter").append(btnDismiss);
+                    $("#modalContent").html('');
+                    $("#modalContent").append('<label> Error: ' + $(jqXHR.responseText).filter('title').text() + ', ' + textStatus + ', ' + errorThrown + '</label>');
+
+                    $("#btnClose").click(function () {
+                        setTimeout(function () {
+                            window.location.replace("/Customer");
+                        }, 1000);
+                    });
+                },
+            });
+        },
+        setAjaxSearchSKU: function (inputVal) {
+            var self = this;
+
+            headers['RequestVerificationToken'] = self.$Token.val();
+
+            $.ajax({
+                url: submitFormURL,
+                type: "POST",
+                data: inputVal,
+                headers: headers,
+                contentType: false,
+                processData: false,
+                success: function (data) {
+                    if (data.isSuccess) {
+
+                        self.$productSearchResult.html('');
+
+                        $.each(data.result, function (key, value) {
+
+                            self.$productSearchResult.append('<a type="button" class="list-group-item list-group-item-action" id="selectedProduct' + value.id + '" value="' + value.id + '"><div class="d-flex w-100 justify-content-between" value="' + value.name + '"><h5 class="mb-1">' + value.name + '</h5><img src="' + value.productImageString + '" alt="..." class="img-thumbnail search-thumbnail"></div><p class="mb-1">SKU: ' + value.code + '</p><small class="unit-price" value="' + value.unitPrice + '">Unit Price: ' + value.unitPrice + '</small></a>');
+
+                        });
+
+                    } else {
+                        if (data.isListResult) {
+                            var msg = "";
+
+                            for (var i = 0; i < data.result.length; i++) {
+                                msg += "Error : " + data.result[i] + "\n";
+                            }
+
+                            $("#modalFooter").html('')
+                            $("#modalFooter").append(btnDismiss);
+                            $("#modalContent").html('');
+                            $("#modalContent").append('<label>' + msg + '</label>');
+
                             $("#btnClose").click(function () {
+                                setTimeout(function () {
+                                    window.location.replace("/Customer");
+                                }, 1000);
+                            });
+                        }
+                        else {
+
+                            $("#modalFooter").html('')
+                            $("#modalFooter").append(btnDismiss);
+                            $("#modalContent").html('');
+                            $("#modalContent").append('<label> Error: ' + data.result + '</label>');
+
+                            $("#btnClose").on('click', function () {
                                 setTimeout(function () {
                                     window.location.replace("/Customer");
                                 }, 1000);
@@ -302,7 +444,7 @@ $(function () {
     headers['RequestVerificationToken'] = token;
     var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
 
-    $('a[id^="btnEdit"]').click(function () {
+    $('a[id^="btnEdit"]').on('click', function () {
 
         pageName = "Edit";
         submitFormURL = editActionURL;
@@ -382,16 +524,16 @@ $(function () {
         });
     });
 
-    $("#btnCreate").on('click', function () {
-        $("#FirstName").val('');
-        $("#LastName").val('');
-        $("#MobileNumber").val('');
-        $("#City").val('');
-        $("#IsActive").val('false');
+    //$("#btnCreate").on('click', function () {
+    //    $("#SKUName").val('');
+    //    $("#Quantity").val('');
+    //    $("#SubTotal").val('');
 
-        pageName = "Create";
-        submitFormURL = addActionURL;
-    });
+    //    skuID = "";
+
+    //    pageName = "Create";
+    //    submitFormURL = addActionURL;
+    //});
 });
 
 function FormValidation() {

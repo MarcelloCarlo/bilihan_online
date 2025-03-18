@@ -96,7 +96,6 @@ namespace bilihan_online.Controllers
             catch (Exception ex)
             {
                 UpdateResultModel(false, false, ex);
-                throw ex;
             }
 
             return Json(_resultModel);
@@ -134,7 +133,6 @@ namespace bilihan_online.Controllers
             catch (System.Exception ex)
             {
                 UpdateResultModel(false, false, ex);
-                throw ex;
             }
             return Json(_resultModel);
         }
@@ -166,9 +164,52 @@ namespace bilihan_online.Controllers
             catch (Exception ex)
             {
                 UpdateResultModel(false, false, ex);
-                throw ex;
             }
 
+            return Json(_resultModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> JsonGetSKU(string? product)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(product))
+                {
+                    var skuModel = await _context.SKUModel
+                        .Select(s => new SKUModel
+                        {
+                            ID = s.ID,
+                            Name = s.Name,
+                            Code = s.Code,
+                            UnitPrice = s.UnitPrice,
+                            ProductImageString = "data:image/jpg;base64," + Convert.ToBase64String(s.ProductImage),
+                            DateCreated = s.DateCreated,
+                            CreatedBy = s.CreatedBy,
+                            Timestamp = s.Timestamp,
+                            UserID = s.UserID,
+                            IsActive = s.IsActive
+                        })
+                        .Where(c => (c.Name.Contains(product) || c.Code.Contains(product)) && c.IsActive).AsQueryable().ToListAsync();
+                    if (skuModel != null)
+                    {
+                        UpdateResultModel(true, false, skuModel);
+                    }
+                    else
+                    {
+                        UpdateResultModel(false, false, "No Product Found.");
+                    }
+                }
+                else
+                {
+                    UpdateResultModel(false, false, "No Product Found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+            }
             return Json(_resultModel);
         }
 
@@ -194,7 +235,6 @@ namespace bilihan_online.Controllers
             catch (System.Exception ex)
             {
                 UpdateResultModel(true, false, ex);
-                throw;
             }
 
             return Json(_resultModel);
