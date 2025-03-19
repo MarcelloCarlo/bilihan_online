@@ -24,7 +24,6 @@ $(document).ready(function () {
             self.$btnSubmit = $("#btnSubmit");
             self.$btnEdtSubmit = $("#btnEdtSubmit");
             self.$btnConfirm = $("#btnConfirm");
-            self.$btnClear = $("#btnClear");
 
             switch (pageName) {
                 case "Create":
@@ -183,7 +182,7 @@ $(document).ready(function () {
                     $("#modalFooter").html('')
                     $("#modalFooter").append(btnDismiss);
                     $("#modalContent").html('');
-                    $("#modalContent").append('<label> Error: ' + $(jqXHR.responseText).filter('title').text() + ', ' + textStatus + ', ' + errorThrown + '</label>');
+                    $("#modalContent").append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
 
                     $("#btnClose").click(function () {
                         setTimeout(function () {
@@ -287,7 +286,7 @@ $(function () {
                 $("#modalFooter").html('')
                 $("#modalFooter").append(btnDismiss);
                 $("#modalContent").html('');
-                $("#modalContent").append('<label> Error: ' + $(jqXHR.responseText).filter('title').text() + ', ' + textStatus + ', ' + errorThrown + '</label>');
+                $("#modalContent").append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
 
                 $("#btnClose").click(function () {
                     setTimeout(function () {

@@ -7,9 +7,12 @@
 <h1>SKUs</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <button id="btnCreate" type="button" class="btn btn-primary" data-bs-toggle="modal"
+        data-bs-target="#modalCreateNew">
+        Create New
+    </button>
 </p>
-<table class="table">
+<table class="table table-hover table-striped table-bordered">
     <thead>
         <tr>
             <th>
@@ -47,12 +50,164 @@
                     @Html.DisplayFor(modelItem => item.IsActive)
                 </td>
                 <td>
-                    <img src="@Html.DisplayFor(modelItem => item.ProductImageString)" class="img-thumbnail table-thumbnail"/>
+                    <img src="@Html.DisplayFor(modelItem => item.ProductImageString)"
+                        class="img-thumbnail table-thumbnail" />
                 </td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a>
+                    @{
+                        var btnEdit = "btnEdit" + item.ID;
+                    }
+                    <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
+                        value="@item.ID">Edit</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Create Modal -->
+<div class="modal fade" id="modalCreateNew" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Create New</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form class="row" id="CreateSKUForm" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="form-group">
+                                <label for="Name" class="control-label">Name</label>
+                                <input id="Name" class="form-control" />
+                                <span id="spanName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="Code" class="control-label">Code</label>
+                                <input id="Code" class="form-control" />
+                                <span id="spanCode" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="UnitPrice" class="control-label">Unit Price</label>
+                                <input id="UnitPrice" class="form-control" />
+                                <span id="spanUnitPrice" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="ProductImageHolder" class="control-label">Image File</label>
+                                <input id="ProductImageHolder" class="form-control" type="file"
+                                    accept="image/jpg, image/jpeg, image/png" />
+                                <span id="spanProductImageHolder" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input id="IsActive" class="form-check-input" type="checkbox" />
+                                    <label for="IsActive" class="form-check-label">Is Active</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnSubmit" data-bs-toggle="modal"
+                    data-bs-target="#confirmationModal">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="modalEdit" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Edit</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+
+                        <form class="row" id="EditSKUForm" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="edtName" class="control-label">Name</label>
+                                <input id="edtName" class="form-control" />
+                                <span id="edtspanName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="edtCode" class="control-label">Code</label>
+                                <input id="edtCode" class="form-control" />
+                                <span id="edtspanCode" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="edtUnitPrice" class="control-label">Unit Price</label>
+                                <input id="edtUnitPrice" class="form-control" />
+                                <span id="edtspanUnitPrice" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Image File</label>
+                                <div class="card mb-3" style="max-width: 540px;">
+                                    <div class="row g-0">
+                                        <div class="col-md-4">
+                                            <img id="edtProductImageString" src="" class="img-fluid" alt="...">
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="card-body">
+                                                <h5 for="edtProductImageHolder" class="control-label">Replace Image</h5>
+                                                <input id="edtProductImageHolder" class="form-control" type="file"
+                                                    accept="image/jpg, image/jpeg, image/png" />
+                                                <span id="edtspanProductImageHolder" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="form-group">
+                                <label for="edtDateCreated" class="control-label">Date Created</label>
+                                <input id="edtDateCreated" class="form-control" disabled />
+                            </div>
+                            <div class="form-group">
+                                <label for="edtCreatedBy" class="control-label">Created By</label>
+                                <input id="edtCreatedBy" class="form-control" disabled />
+                            </div>
+                            <div class="form-group">
+                                <label for="edtTimestamp" class="control-label">Timestamp</label>
+                                <input id="edtTimestamp" class="form-control" disabled />
+                            </div>
+                            <div class="form-group">
+                                <label for="edtUserID" class="control-label">User ID</label>
+                                <input id="edtUserID" class="form-control" disabled />
+                            </div>
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input id="edtIsActive" class="form-check-input" type="checkbox" />
+                                    <label for="edtIsActive" class="form-check-label">Is Active</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnEdtSubmit" data-bs-toggle="modal"
+                    data-bs-target="#confirmationModal">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        var addActionURL = '@Url.Action("JsonCreate")';
+        var editActionURL = '@Url.Action("JsonEdit")';
+        var getActionURL = '@Url.Action("JsonDetails")';
+    </script>
+    <script src="~/js/pages/sku.js" asp-append-version="true"></script>
+}

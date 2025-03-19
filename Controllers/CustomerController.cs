@@ -166,15 +166,6 @@ namespace bilihan_online.Controllers
             }
         }
 
-        private CustomerModel GetCustomerModel(int id)
-        {
-
-            var customerModel = _context.CustomerModel
-        .FirstOrDefault(m => m.ID == id);
-
-            return customerModel;
-        }
-
         public ResultModel UpdateResultModel(bool isSuccess, bool isListResult, object resultObject)
         {
             _resultModel.IsSuccess = isSuccess;
