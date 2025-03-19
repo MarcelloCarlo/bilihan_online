@@ -170,7 +170,8 @@ namespace bilihan_online.Controllers
                     return NotFound();
                 }
 
-                var currentPurchaseItem = _context.PurchaseItemModel.Include(sku => sku.ID).First(pi => pi.ID == purchaseItemModel.ID);
+                var currentPurchaseItem = _context.PurchaseItemModel.Include(sku => sku.SKUID).Include(po => po.PurchaseOrderID).First(pi => pi.ID == purchaseItemModel.ID);
+
                 _context.PurchaseItemModel
                 .Where(pi => pi.ID == currentPurchaseItem.ID)
                     .ExecuteUpdate(u => u
@@ -180,23 +181,18 @@ namespace bilihan_online.Controllers
                         .SetProperty(pi => pi.UserID, DEFAULT_USER_ID)
                         );
 
-                var orderToBeComputed = _context.PurchaseOrderModel.Find(purchaseItemModel.PurchaseOrderID);
+                decimal newAmountDue = (currentPurchaseItem.PurchaseOrderID.AmountDue - currentPurchaseItem.Price) + purchaseItemModel.Price;
+                currentPurchaseItem.PurchaseOrderID.AmountDue = newAmountDue;
 
-                if (orderToBeComputed != null)
-                {
-                    decimal newAmountDue = (orderToBeComputed.AmountDue - currentPurchaseItem.Price) + purchaseItemModel.Price;
-                    orderToBeComputed.AmountDue = newAmountDue;
-                    _context.PurchaseOrderModel
-                        .Where(pi => pi.ID == orderToBeComputed.ID)
-                    .ExecuteUpdate(u => u
-                        .SetProperty(pi => pi.AmountDue, newAmountDue)
+                _context.PurchaseOrderModel
+                    .Where(po => po.ID == currentPurchaseItem.PurchaseOrderID.ID)
+                .ExecuteUpdate(u => u
+                    .SetProperty(pi => pi.AmountDue, newAmountDue)
+                    .SetProperty(pi => pi.Timestamp, DateTime.Now)
+                    .SetProperty(pi => pi.UserID, DEFAULT_USER_ID));
 
-                        );
-                }
 
                 await _context.SaveChangesAsync();
-
-                _resultModel.Result = purchaseItemModel;
 
                 UpdateResultModel(true, false, "Edit Success.");
             }

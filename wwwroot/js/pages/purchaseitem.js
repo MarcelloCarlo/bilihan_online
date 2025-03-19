@@ -62,10 +62,10 @@ $(document).ready(function () {
                     FormValidation();
                     break;
                 case "Index":
-                    if (orderID !== 0 || orderID != null) {
+                    if (orderID != 0 && orderID) {
                         submitFormURL = orderDetailsURL;
                         var form_data = new FormData();
-                        form_data.append("id", orderID.trim());
+                        form_data.append("id", orderID);
                         self.setAjaxGetDetails(form_data);
                     }
                     break;
@@ -107,7 +107,7 @@ $(document).ready(function () {
                 //else, throw an error
                 self.declaration();
                 self.$btnConfirm.on('click', function () {
-                    debugger;
+                    
                     if (pageName == "Create") {
                         var inputVal = {
                             PurchaseOrderModel: {
@@ -145,6 +145,7 @@ $(document).ready(function () {
                         }
                     }
                     else {
+                        submitFormURL = editActionURL;
                         var inputVal = {
                             ID: orderItemID,
                             Quantity: self.$edtQuantity.val().trim(),
@@ -158,7 +159,6 @@ $(document).ready(function () {
                         }
                     }
 
-                    debugger;
                     self.setAjaxSendEvent(form_data);
                 });
 
@@ -170,7 +170,7 @@ $(document).ready(function () {
                 //else, throw an error
                 self.declaration();
                 self.$btnConfirm.on('click', function () {
-                    debugger;
+                    submitFormURL = editActionURL;
                     var inputVal = {
                         ID: orderItemID,
                         Quantity: self.$edtQuantity.val().trim(),
@@ -276,11 +276,11 @@ $(document).ready(function () {
             });
 
             self.$Status.on('keyup change', function () {
-                if (orderID !== 0 || orderID != null) {
-                    debugger;
+                if (orderID != 0 && orderID) {
+                    
                     submitFormURL = orderUpdateStatus;
                     var inputVal = {
-                        ID: (orderID == '' || orderID == null ? '0' : orderID),
+                        ID: (orderID == '' || orderID == null ? 0 : orderID),
                         Status: self.$Status.val().trim(),
                     };
 
@@ -299,7 +299,7 @@ $(document).ready(function () {
             var self = this;
 
             headers['RequestVerificationToken'] = self.$Token.val();
-            debugger;
+            
             $.ajax({
                 url: submitFormURL,
                 type: "POST",
