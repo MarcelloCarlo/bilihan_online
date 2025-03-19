@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using bilihan_online.Models;
 using bilihanonline.Data;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace bilihan_online.Controllers
 {
@@ -24,72 +25,129 @@ namespace bilihan_online.Controllers
         // GET: PurchaseItem
         public async Task<IActionResult> Index()
         {
-            return View(await _context.PurchaseItemModel.ToListAsync());
-        }
+            try
+            {
+                if (HttpContext.Session.GetInt32("PurchaseOrderID") == 0)
+                {
+                    return View(await _context.PurchaseItemModel.Where(pi => pi.PurchaseOrderID.ID == 0).ToListAsync());
+                }
+                else
+                {
+                    var purchaseOrderID = HttpContext.Session.GetInt32("PurchaseOrderID");
+                    if (purchaseOrderID == null)
+                    {
+                        return NotFound();
+                    }
 
-        // GET: PurchaseItem/Create
-        public IActionResult Create()
-        {
-            return View();
+                    var purchaseOrderModel = await _context.PurchaseOrderModel.FindAsync(purchaseOrderID);
+                    if (purchaseOrderModel == null)
+                    {
+                        return NotFound();
+                    }
+
+                    var purchaseItemList = await _context.PurchaseItemModel
+                        .Include(pi => pi.SKUID)
+                        .Where(pi => pi.PurchaseOrderID == purchaseOrderModel)
+                        .ToListAsync();
+                    return View(purchaseItemList);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex);
+            }
+
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> JsonCreate(PurchaseOrderModel purchaseOrderModel, PurchaseItemModel purchaseItemModel)
+        public async Task<IActionResult> JsonGetItemDetails(int? id)
         {
             try
             {
-                if (purchaseOrderModel.ID == 0)
+                if (id == null || id == 0)
                 {
-                    purchaseOrderModel.DateCreated = DateTime.Now;
-                    purchaseOrderModel.CreatedBy = DEFAULT_USER_ID;
-                    purchaseOrderModel.Timestamp = DateTime.Now;
-                    purchaseOrderModel.UserID = DEFAULT_USER_ID;
+                    return NotFound();
+                }
+                PurchaseItemModel purchaseItemModel = await _context.PurchaseItemModel.Include(sku => sku.SKUID).FirstAsync(pi => pi.ID == id) ?? throw new Exception("Order item not found");
+                UpdateResultModel(true, false, purchaseItemModel);
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
+            }
 
-                    _context.Add(purchaseOrderModel);
+            return Json(_resultModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> JsonCreate(OrderFormModel orderFormModel)
+        {
+            try
+            {
+                if (orderFormModel.PurchaseOrderModel.ID == 0)
+                {
+                    orderFormModel.PurchaseOrderModel.CustomerID = _context.CustomerModel.Find(orderFormModel.PurchaseOrderModel.CustomerID.ID) ?? throw new InvalidOperationException("Customer not found");
+                    orderFormModel.PurchaseOrderModel.DateCreated = DateTime.Now;
+                    orderFormModel.PurchaseOrderModel.CreatedBy = DEFAULT_USER_ID;
+                    orderFormModel.PurchaseOrderModel.Timestamp = DateTime.Now;
+                    orderFormModel.PurchaseOrderModel.UserID = DEFAULT_USER_ID;
+                    orderFormModel.PurchaseOrderModel.IsActive = true;
+
+                    _context.Add(orderFormModel.PurchaseOrderModel);
                     await _context.SaveChangesAsync();
 
-                    int purchaseOrderID = purchaseOrderModel.ID;
+                    int purchaseOrderID = orderFormModel.PurchaseOrderModel.ID;
 
                     if (purchaseOrderID >= 1)
                     {
-                        purchaseItemModel.Timestamp = DateTime.Now;
-                        purchaseItemModel.UserID = DEFAULT_USER_ID;
+                        orderFormModel.PurchaseItemModel.Timestamp = DateTime.Now;
+                        orderFormModel.PurchaseItemModel.UserID = DEFAULT_USER_ID;
+                        orderFormModel.PurchaseItemModel.SKUID = _context.SKUModel.Find(orderFormModel.PurchaseItemModel.SKUID.ID) ?? throw new InvalidOperationException("Product not found");
 
-                        purchaseItemModel.PurchaseOrderID = purchaseOrderModel;
-                        _context.Add(purchaseItemModel);
+                        orderFormModel.PurchaseItemModel.PurchaseOrderID = orderFormModel.PurchaseOrderModel;
+                        _context.Add(orderFormModel.PurchaseItemModel);
                         await _context.SaveChangesAsync();
 
-                        _resultModel.Result = purchaseOrderModel;
+                        UpdateResultModel(true, false, orderFormModel.PurchaseOrderModel);
                     }
                     else
                     {
                         UpdateResultModel(false, false, "Order saving failed");
                     }
+
+                    HttpContext.Session.SetInt32("PurchaseOrderID", purchaseOrderID);
                 }
                 else
                 {
-                    var purchaseItemCheck = _context.PurchaseItemModel.SingleOrDefaultAsync(pi => pi.PurchaseOrderID == purchaseOrderModel && pi.SKUID == purchaseItemModel.SKUID);
+                    bool purchaseItemCheck = _context.PurchaseItemModel.Any(pi => pi.PurchaseOrderID.ID == orderFormModel.PurchaseOrderModel.ID && pi.SKUID.ID == orderFormModel.PurchaseItemModel.SKUID.ID);
 
-                    if (purchaseItemCheck == null)
+                    if (!purchaseItemCheck)
                     {
-                        purchaseItemModel.PurchaseOrderID = purchaseOrderModel;
-                        _context.Add(purchaseItemModel);
+                        orderFormModel.PurchaseItemModel.PurchaseOrderID = _context.PurchaseOrderModel.FirstOrDefault(po => po.ID == orderFormModel.PurchaseOrderModel.ID) ?? throw new Exception("Order not found");
+                        orderFormModel.PurchaseItemModel.SKUID = _context.SKUModel.FirstOrDefault(sku => sku.ID == orderFormModel.PurchaseItemModel.SKUID.ID) ?? throw new Exception("Product not found");
+                        orderFormModel.PurchaseItemModel.Timestamp = DateTime.Now;
+                        orderFormModel.PurchaseItemModel.UserID = DEFAULT_USER_ID;
+                        _context.PurchaseItemModel.Add(orderFormModel.PurchaseItemModel);
                         _context.PurchaseOrderModel
-                            .Where(po => po.ID == purchaseItemModel.ID)
+                            .Where(po => po.ID == orderFormModel.PurchaseOrderModel.ID)
                                 .ExecuteUpdate(s => s
-                                    .SetProperty(po => po.AmountDue, purchaseOrderModel.AmountDue)
+                                    .SetProperty(po => po.AmountDue, orderFormModel.PurchaseOrderModel.AmountDue + orderFormModel.PurchaseItemModel.Price)
                                     .SetProperty(po => po.Timestamp, DateTime.Now)
                                     .SetProperty(po => po.UserID, DEFAULT_USER_ID));
 
                         await _context.SaveChangesAsync();
 
-                        _resultModel.Result = purchaseOrderModel;
+                        UpdateResultModel(true, false, orderFormModel.PurchaseOrderModel);
                     }
                     else
                     {
-                        UpdateResultModel(false, false, "Item already exists on the order");
+                        UpdateResultModel(false, false, "Item already exists in the order");
                     }
+
+                    HttpContext.Session.SetInt32("PurchaseOrderID", orderFormModel.PurchaseOrderModel.ID);
 
                 }
             }
@@ -103,12 +161,18 @@ namespace bilihan_online.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonEdit(PurchaseItemModel purchaseItemModel)
+        public async Task<IActionResult> JsonEdit(PurchaseItemModel purchaseItemModel)
         {
             try
             {
+                if (purchaseItemModel.ID == 0)
+                {
+                    return NotFound();
+                }
+
+                var currentPurchaseItem = _context.PurchaseItemModel.Include(sku => sku.ID).First(pi => pi.ID == purchaseItemModel.ID);
                 _context.PurchaseItemModel
-                .Where(pi => pi.ID == purchaseItemModel.ID)
+                .Where(pi => pi.ID == currentPurchaseItem.ID)
                     .ExecuteUpdate(u => u
                         .SetProperty(pi => pi.Quantity, purchaseItemModel.Quantity)
                         .SetProperty(pi => pi.Price, purchaseItemModel.Price)
@@ -120,8 +184,14 @@ namespace bilihan_online.Controllers
 
                 if (orderToBeComputed != null)
                 {
-                    orderToBeComputed.AmountDue += purchaseItemModel.Price;
-                    _context.PurchaseOrderModel.Update(orderToBeComputed);
+                    decimal newAmountDue = (orderToBeComputed.AmountDue - currentPurchaseItem.Price) + purchaseItemModel.Price;
+                    orderToBeComputed.AmountDue = newAmountDue;
+                    _context.PurchaseOrderModel
+                        .Where(pi => pi.ID == orderToBeComputed.ID)
+                    .ExecuteUpdate(u => u
+                        .SetProperty(pi => pi.AmountDue, newAmountDue)
+
+                        );
                 }
 
                 await _context.SaveChangesAsync();
@@ -139,13 +209,13 @@ namespace bilihan_online.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonGetCustomer(string? name)
+        public async Task<IActionResult> JsonGetCustomer(string? name)
         {
             try
             {
                 if (!string.IsNullOrEmpty(name))
                 {
-                    var customerModel = await _context.CustomerModel.Where(c => c.FullName.Contains(name)).AsQueryable().ToListAsync();
+                    var customerModel = await _context.CustomerModel.Where(c => c.FullName.Contains(name) && c.IsActive).AsQueryable().ToListAsync();
                     if (customerModel != null)
                     {
                         UpdateResultModel(true, false, customerModel);
@@ -171,7 +241,7 @@ namespace bilihan_online.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonGetSKU(string? product)
+        public async Task<IActionResult> JsonGetSKU(string? product)
         {
             try
             {
@@ -215,26 +285,57 @@ namespace bilihan_online.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonUpdateOrderStatus(PurchaseOrderModel purchaseOrderModel)
+        public async Task<IActionResult> JsonUpdateOrderStatus(PurchaseOrderModel purchaseOrderModel)
         {
             try
             {
+                if (purchaseOrderModel.ID == 0)
+                {
+                    return NotFound();
+                }
+
+                var currentPurchaseOrder = _context.PurchaseOrderModel.First(po => po.ID == purchaseOrderModel.ID);
 
                 _context.PurchaseOrderModel
-                    .Where(po => po.ID == purchaseOrderModel.ID)
+                    .Where(po => po.ID == currentPurchaseOrder.ID)
                         .ExecuteUpdate(s => s
                             .SetProperty(po => po.Status, purchaseOrderModel.Status)
                             .SetProperty(po => po.Timestamp, DateTime.Now)
                             .SetProperty(po => po.UserID, DEFAULT_USER_ID));
 
                 await _context.SaveChangesAsync();
-                _resultModel.Result = purchaseOrderModel;
-                UpdateResultModel(true, false, "Updated");
+                UpdateResultModel(true, false, purchaseOrderModel);
 
             }
             catch (System.Exception ex)
             {
                 UpdateResultModel(true, false, ex);
+            }
+
+            return Json(_resultModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> JsonGetOrderDetails(int? id)
+        {
+            try
+            {
+                if (id == null || id == 0)
+                {
+                    return NotFound();
+                }
+
+                var purchaseOrder = await _context.PurchaseOrderModel
+                    .Include(po => po.CustomerID)
+                    .Where(po => po.ID == id)
+                    .ToListAsync();
+
+                UpdateResultModel(true, false, purchaseOrder);
+            }
+            catch (Exception ex)
+            {
+                UpdateResultModel(false, false, ex);
             }
 
             return Json(_resultModel);

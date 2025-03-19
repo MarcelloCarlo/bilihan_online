@@ -1,4 +1,6 @@
+@using Microsoft.AspNetCore.Mvc;
 @model IEnumerable<bilihan_online.Models.PurchaseItemModel>
+
 
 @{
     ViewData["Title"] = "Order Taking";
@@ -60,16 +62,13 @@
     <thead>
         <tr>
             <th>
+                @Html.DisplayNameFor(model => model.SKUID.Name)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.Quantity)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Timestamp)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UserID)
             </th>
             <th></th>
         </tr>
@@ -79,26 +78,30 @@
         {
             <tr>
                 <td>
+                    @Html.DisplayFor(modelItem => item.SKUID.Name)
+                </td>
+                <td>
                     @Html.DisplayFor(modelItem => item.Quantity)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.Price)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Timestamp)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.UserID)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                    @{
+                        var btnEdit = "btnEdit" + item.ID;
+                    }
+                    <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
+                       value="@item.ID">Edit</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<div class="d-flex">
+    <div class="p-2 w-100">Total Amount</div>
+    <div class="p-2 flex-shrink-1" id="AmountDue">0</div>
+</div>
 
 <!-- Create Modal -->
 <div class="modal fade" id="modalCreateNew" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
@@ -164,51 +167,24 @@
 
                         <form class="row" id="editProductItemForm">
                             <div class="form-group">
-                                <label for="edtFirstName" class="control-label">First Name</label>
-                                <input id="edtFirstName" class="form-control" required />
-                                <span id="edtSpanFirstName" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="edtLastName" class="control-label">Last Name</label>
-                                <input id="edtLastName" class="form-control" required />
-                                <span id="edtspanLastName" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="edtFullName" class="control-label">Full Name</label>
-                                <input id="edtFullName" class="form-control" disabled />
-                            </div>
-                            <div class="form-group">
-                                <label for="edtMobileNumber" class="control-label">Mobile Number</label>
-                                <input id="edtMobileNumber" class="form-control" required />
-                                <span id="edtSpanMobileNumber" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="edtCity" class="control-label">City</label>
-                                <input id="edtCity" class="form-control" required />
-                                <span id="edtSpanCity" class="text-danger"></span>
-                            </div>
-                            <div class="form-group">
-                                <label for="edtDateCreated" class="control-label">Date Created</label>
-                                <input id="edtDateCreated" class="form-control" disabled />
-                            </div>
-                            <div class="form-group">
-                                <label for="edtCreatedBy" class="control-label">Created By</label>
-                                <input id="edtCreatedBy" class="form-control" disabled />
-                            </div>
-                            <div class="form-group">
-                                <label for="edtTimestamp" class="control-label">Timestamp</label>
-                                <input id="edtTimestamp" class="form-control" disabled />
-                            </div>
-                            <div class="form-group">
-                                <label for="edtUserID" class="control-label">User ID</label>
-                                <input id="edtUserID" class="form-control" disabled />
-                            </div>
-
-                            <div class="form-group">
-                                <div class="form-check">
-                                    <input id="edtIsActive" class="form-check-input" type="checkbox" />
-                                    <label for="edtIsActive" class="form-check-label">Is Active</label>
+                                <label for="edtSKUName" class="control-label">SKU</label>
+                                <input id="edtSKUName" class="form-control" type="text" placeholder="Search Products" aria-label="Search" disabled />
+                                <div class="collapse" id="searchSKUDiv">
+                                    <div class="card list-group" id="productSearchResult">
+                                        <a class="list-group-item d-flex justify-content-between align-items-center" id="selectedSKU" href="#" type="button">No Results</a>
+                                    </div>
                                 </div>
+                                <span id="edtspanSKUName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="edtQuantity" class="control-label">Quantity</label>
+                                <input id="edtQuantity" class="form-control" required />
+                                <span id="edtspanQuantity" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="edtSubTotal" class="control-label">Sub Total</label>
+                                <input id="edtSubTotal" class="form-control" required disabled />
+                                <span id="edtspanSubTotal" class="text-danger"></span>
                             </div>
 
                         </form>
@@ -233,6 +209,10 @@
         var editActionURL = '@Url.Action("JsonEdit")';
         var customerSearchURL = '@Url.Action("JsonGetCustomer")';
         var productSearchURL = '@Url.Action("JsonGetSKU")';
+        var orderDetailsURL = '@Url.Action("JsonGetOrderDetails")';
+        var orderUpdateStatus = '@Url.Action("JsonUpdateOrderStatus")';
+        var orderItemDetails = '@Url.Action("JsonGetItemDetails")';
+        var orderID = @Context.Session.GetInt32("PurchaseOrderID");
     </script>
     <script src="~/js/pages/purchaseitem.js" asp-append-version="true"></script>
 }

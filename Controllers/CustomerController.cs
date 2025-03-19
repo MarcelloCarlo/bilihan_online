@@ -33,7 +33,7 @@ namespace bilihan_online.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonCreate(CustomerModel customer)
+        public async Task<IActionResult> JsonCreate(CustomerModel customer)
         {
             try
             {
@@ -69,7 +69,7 @@ namespace bilihan_online.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonDetails(int? id)
+        public async Task<IActionResult> JsonDetails(int? id)
         {
             try
             {
@@ -101,7 +101,7 @@ namespace bilihan_online.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> JsonEdit(CustomerModel customer)
+        public async Task<IActionResult> JsonEdit(CustomerModel customer)
         {
             try
             {

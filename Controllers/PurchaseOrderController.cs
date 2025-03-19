@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using bilihan_online.Models;
@@ -22,7 +23,8 @@ namespace bilihan_online.Controllers
         // GET: PurchaseOrder
         public async Task<IActionResult> Index()
         {
-            return View(await _context.PurchaseOrderModel.ToListAsync());
+            HttpContext.Session.SetInt32("PurchaseOrderID", 0);
+            return View(await _context.PurchaseOrderModel.Include(cust => cust.CustomerID).ToListAsync());
         }
 
         // GET: PurchaseOrder/Create
@@ -35,17 +37,29 @@ namespace bilihan_online.Controllers
         // GET: PurchaseOrder/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
+                if (id == null)
+                {
+                    return NotFound();
+                }
+
+                PurchaseOrderModel purchaseOrderModel = await _context.PurchaseOrderModel.FindAsync(id);
+
+                if (purchaseOrderModel == null)
+                {
+                    return NotFound();
+                }
+
+                HttpContext.Session.SetInt32("PurchaseOrderID", purchaseOrderModel.ID);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
             }
 
-            var purchaseOrderModel = await _context.PurchaseOrderModel.FindAsync(id);
-            if (purchaseOrderModel == null)
-            {
-                return NotFound();
-            }
-            return View(purchaseOrderModel);
+            return RedirectToAction("Index", "PurchaseItem", new { area = "Edit" });
         }
 
     }
