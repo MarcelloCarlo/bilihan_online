@@ -76,6 +76,7 @@ $(document).ready(function () {
                 pageName = "Create";
                 submitFormURL = addActionURL;
                 self.declaration();
+                self.formValidate();
 
                 self.$FirstName.val('');
                 self.$LastName.val('');
@@ -93,6 +94,7 @@ $(document).ready(function () {
                 var form_data = new FormData();
                 form_data.append("id", customerID);
                 self.declaration();
+                self.formValidate();
 
                 self.setAjaxSendEvent(form_data);
             });
@@ -102,8 +104,6 @@ $(document).ready(function () {
                 //If the inputs are valid
                 //proceed to btnConfirm action
                 //else, throw an error
-                self.declaration();
-                self.formValidate();
                 self.$btnConfirm.on('click', function () {
 
                     var inputVal = {
@@ -133,9 +133,6 @@ $(document).ready(function () {
                 //else, throw an error
                 pageName = "Edit"
                 submitFormURL = editActionURL;
-                self.declaration();
-
-                self.formValidate();
                 self.$btnConfirm.on('click', function () {
 
                     var inputVal = {
@@ -239,7 +236,7 @@ $(document).ready(function () {
                 },
             });
         },
-        formValidate: function () { 
+        formValidate: function () {
             var self = this;
             debugger;
             var ctr = 0;
@@ -305,34 +302,33 @@ $(document).ready(function () {
                     else {
                         requiredErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '.</h5></span> <br />');
                     }
-        
+
                     if (ctr == errorCount) {
-        
+
                         if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
                             requiredErrors = [];
                             otherErrors = [];
                             self.$divErrorMessage.append('<span class=\"invalid\"><h5>Highlighted fields are required.</h5></span><br />');
                             self.$divErrorMessage.css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-        
+
                         }
                         else if (requiredErrors.length == 1) {
                             self.$divErrorMessage.append(requiredErrors);
                             self.$divErrorMessage.css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-        
+
                         }
                         else if (otherErrors.length == 1) {
                             self.$divErrorMessage.append(otherErrors);
                             self.$divErrorMessage.css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-        
+
                         }
-        
+
                         requiredErrors = [];
                         otherErrors = [];
                         ctr = 0;
                     }
-        
+
                 }
-        
             });
         },
     }
