@@ -12,7 +12,7 @@
         Create New
     </button>
 </p>
-<table class="table table-hover table-striped table-bordered">
+<table class="table table-hover table-striped table-bordered align-middle">
     <thead>
         <tr>
             <th>
@@ -43,15 +43,15 @@
                 <td>
                     @Html.DisplayFor(modelItem => item.Code)
                 </td>
-                <td>
+                <td class="text-end">
                     @Html.DisplayFor(modelItem => item.UnitPrice)
                 </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.IsActive)
+                <td class="text-end">
+                    @(item.IsActive ? "TRUE" : "FALSE")
                 </td>
-                <td>
+                <td class="w-25">
                     <img src="@Html.DisplayFor(modelItem => item.ProductImageString)"
-                        class="img-thumbnail table-thumbnail" />
+                        class="img-fluid img-thumbnail" />
                 </td>
                 <td>
                     @{
@@ -150,12 +150,12 @@
                             </div>
                             <div class="form-group">
                                 <label class="control-label">Image File</label>
-                                <div class="card mb-3" style="max-width: 540px;">
+                                <div class="card mb-3">
                                     <div class="row g-0">
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <img id="edtProductImageString" src="" class="img-fluid" alt="...">
                                         </div>
-                                        <div class="col-md-8">
+                                        <div class="col-md-6 d-flex align-items-center">
                                             <div class="card-body">
                                                 <h5 for="edtProductImageHolder" class="control-label">Replace Image</h5>
                                                 <input id="edtProductImageHolder" class="form-control" type="file"

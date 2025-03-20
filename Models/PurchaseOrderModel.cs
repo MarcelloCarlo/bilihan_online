@@ -9,7 +9,7 @@ public class PurchaseOrderModel
     public int ID { get; set; }
     public CustomerModel CustomerID { get; set; }
 
-    [DisplayName("Date Of Delivery")]
+    [DisplayName("Deliver Date")]
     public DateTime DateOfDelivery { get; set; }
 
     [DisplayName("Status")]
