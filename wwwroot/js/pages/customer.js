@@ -1,12 +1,27 @@
-var customerID = "";
-var pageName = "Index";
-var submitFormURL = "";
-
 $(document).ready(function () {
 
+    var customerID = "";
+    var pageName = "Index";
+    var submitFormURL = "";
     var headers = {};
     var successMessage = "";
     var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
+
+    /**
+     * @namespace CustomerObjectTask
+     * @description Handles customer-related operations and form management in the application
+     * @property {Function} init - Initializes the customer object by calling declaration and setEvent methods
+     * @property {Function} declaration - Declares and initializes DOM element references and sets up form based on page context
+     * @property {Function} setEvent - Sets up event handlers for various buttons and form actions
+     * @property {Function} setSubmitEvent - Handles form submission validation and confirmation modal display
+     * @property {Function} setAjaxSendEvent - Performs AJAX requests to server for CRUD operations
+     * @property {Function} clearInputs - Clears all input fields in the form
+     * @property {Function} formValidate - Sets up jQuery validation rules and custom error handling for the form
+     * @property {Function} textOnly - Restricts input to text characters only
+     * @property {Function} numbersOnly - Restricts input to numeric characters only
+     * @requires jQuery
+     * @requires jQuery.validate
+     */
 
     var CustomerObjectTask = {
 
@@ -19,11 +34,13 @@ $(document).ready(function () {
             var self = this;
 
             self.$Token = $('input[name="__RequestVerificationToken"]');
+            self.$confirmationModal = $("#confirmationModal");
             self.$modalContent = $("#modalContent");
             self.$modalFooter = $("#modalFooter");
             self.$btnSubmit = $("#btnSubmit");
             self.$btnEdtSubmit = $("#btnEdtSubmit");
             self.$btnConfirm = $("#btnConfirm");
+            self.$btnClose = $("#btnClose");
             self.$btnCreate = $("#btnCreate");
             self.$btnEdit = $('a[id^="btnEdit"]');
 
@@ -32,11 +49,19 @@ $(document).ready(function () {
                     self.$modalContent.html('');
                     self.$modalContent.append('<label>Are you sure you want to add this record?</label>');
                     successMessage = 'Record successfully saved.';
+
                     self.$FirstName = $("#FirstName");
                     self.$LastName = $("#LastName");
                     self.$MobileNumber = $("#MobileNumber");
                     self.$City = $("#City");
+
+                    self.textOnly(self.$FirstName);
+                    self.textOnly(self.$LastName);
+                    self.numbersOnly(self.$MobileNumber);
+                    self.textOnly(self.$City);
+
                     self.$IsActive = $("#IsActive");
+
                     self.$CustomerForm = $("#CreateCustomerForm");
                     self.$divErrorMessage = $("#divErrorMessage");
                     break;
@@ -44,11 +69,19 @@ $(document).ready(function () {
                     self.$modalContent.html('');
                     self.$modalContent.append('<label>Are you sure you want to update this record?</label>');
                     successMessage = 'Record successfully updated.';
+
                     self.$FirstName = $("#edtFirstName");
                     self.$LastName = $("#edtLastName");
                     self.$MobileNumber = $("#edtMobileNumber");
                     self.$City = $("#edtCity");
+
+                    self.textOnly(self.$FirstName);
+                    self.textOnly(self.$LastName);
+                    self.numbersOnly(self.$MobileNumber);
+                    self.textOnly(self.$City);
+
                     self.$IsActive = $("#edtIsActive");
+
                     self.$CustomerForm = $("#EditCustomerForm");
                     self.$divErrorMessage = $("#edtdivErrorMessage");
                     break;
@@ -58,13 +91,21 @@ $(document).ready(function () {
                     self.$FullName = $("#edtFullName");
                     self.$MobileNumber = $("#edtMobileNumber");
                     self.$City = $("#edtCity");
+
+                    self.textOnly(self.$FirstName);
+                    self.textOnly(self.$LastName);
+                    self.numbersOnly(self.$MobileNumber);
+                    self.textOnly(self.$City);
+
                     self.$DateCreated = $("#edtDateCreated");
                     self.$CreatedBy = $("#edtCreatedBy");
                     self.$Timestamp = $("#edtTimestamp");
                     self.$UserID = $("#edtUserID");
                     self.$IsActive = $("#edtIsActive");
-                    break;
 
+                    self.$CustomerForm = $("#EditCustomerForm");
+                    self.$divErrorMessage = $("#edtdivErrorMessage");
+                    break;
             }
 
         },
@@ -77,12 +118,7 @@ $(document).ready(function () {
                 submitFormURL = addActionURL;
                 self.declaration();
                 self.formValidate();
-
-                self.$FirstName.val('');
-                self.$LastName.val('');
-                self.$MobileNumber.val('');
-                self.$City.val('');
-                self.$IsActive.val('false');
+                self.clearInputs();
 
             });
 
@@ -100,39 +136,28 @@ $(document).ready(function () {
             });
 
             //Submit action
-            self.$btnSubmit.on('click', function () {
-                //If the inputs are valid
-                //proceed to btnConfirm action
-                //else, throw an error
-                self.$btnConfirm.on('click', function () {
+            self.$btnSubmit.on('click', function (e) {
+                e.preventDefault();
 
-                    var inputVal = {
-                        Id: (customerID == '' || customerID == null ? '0' : customerID),
-                        FirstName: self.$FirstName.val().trim(),
-                        LastName: self.$LastName.val().trim(),
-                        MobileNumber: self.$MobileNumber.val().trim(),
-                        City: self.$City.val().trim(),
-                        IsActive: self.$IsActive.is(":checked") ? "true" : "false"
-                    };
-
-                    var form_data = new FormData();
-
-                    for (var key in inputVal) {
-                        form_data.append(key, inputVal[key]);
-                    }
-
-                    self.setAjaxSendEvent(form_data);
-
-                });
-
+                self.setSubmitEvent();
             });
 
             self.$btnEdtSubmit.on('click', function () {
-                //If the inputs are valid
-                //proceed to btnConfirm action
-                //else, throw an error
                 pageName = "Edit"
                 submitFormURL = editActionURL;
+                self.setSubmitEvent();
+
+            });
+
+        },
+        setSubmitEvent: function () {
+            var self = this;
+
+            if (self.$CustomerForm.valid()) {
+                self.$divErrorMessage.empty();
+                self.$divErrorMessage.removeClass("alert alert-danger");
+                self.$confirmationModal.modal('show');
+
                 self.$btnConfirm.on('click', function () {
 
                     var inputVal = {
@@ -154,7 +179,11 @@ $(document).ready(function () {
 
                 });
 
-            });
+            } else {
+                self.$divErrorMessage.empty(); // Clear previous errors
+                self.$divErrorMessage.removeClass("alert alert-danger");
+                self.$CustomerForm.validate().showErrors(); // Show validation errors
+            }
         },
         setAjaxSendEvent: function (inputVal) {
             var self = this;
@@ -171,10 +200,10 @@ $(document).ready(function () {
                 success: function (data) {
                     if (data.isSuccess) {
                         if (pageName == "Create" || pageName == "Edit") {
-                            $("#modalFooter").html('')
-                            $("#modalFooter").append(btnDismiss);
-                            $("#modalContent").html('');
-                            $("#modalContent").append('<label>' + successMessage + '</label>');
+                            self.$modalFooter.html('')
+                            self.$modalFooter.append(btnDismiss);
+                            self.$modalContent.html('');
+                            self.$modalContent.append('<label>' + successMessage + '</label>');
 
                             $("#btnClose").click(function () {
                                 window.location.replace("/Customer");
@@ -187,9 +216,9 @@ $(document).ready(function () {
                             self.$MobileNumber.val(data.result.mobileNumber);
                             self.$City.val(data.result.city);
 
-                            self.$DateCreated.val(data.result.dateCreated);
+                            self.$DateCreated.val(self.formatDate(data.result.dateCreated));
                             self.$CreatedBy.val(data.result.createdBy);
-                            self.$Timestamp.val(data.result.timestamp);
+                            self.$Timestamp.val(self.formatDate(data.result.timestamp));
                             self.$UserID.val(data.result.userID);
                             self.$IsActive.prop("checked", data.result.isActive);
                         }
@@ -202,43 +231,50 @@ $(document).ready(function () {
                                 msg += "Error : " + data.result[i] + "\n";
                             }
 
-                            $("#modalFooter").html('')
-                            $("#modalFooter").append(btnDismiss);
-                            $("#modalContent").html('');
-                            $("#modalContent").append('<label>' + msg + '</label>');
+                            self.$modalFooter.html('')
+                            self.$modalFooter.append(btnDismiss);
+                            self.$modalContent.html('');
+                            self.$modalContent.append('<label>' + msg + '</label>');
 
-                            $("#btnClose").click(function () {
+                            self.$btnClose.click(function () {
                                 window.location.replace("/Customer");
                             });
                         }
                         else {
 
-                            $("#modalFooter").html('')
-                            $("#modalFooter").append(btnDismiss);
-                            $("#modalContent").html('');
-                            $("#modalContent").append('<label> Error: ' + data.result + '</label>');
+                            self.$modalFooter.html('')
+                            self.$modalFooter.append(btnDismiss);
+                            self.$modalContent.html('');
+                            self.$modalContent.append('<label> Error: ' + data.result + '</label>');
 
-                            $("#btnClose").click(function () {
+                            self.$btnClose.click(function () {
                                 window.location.replace("/Customer");
                             });
                         }
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    $("#modalFooter").html('')
-                    $("#modalFooter").append(btnDismiss);
-                    $("#modalContent").html('');
-                    $("#modalContent").append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
+                    self.$modalFooter.html('')
+                    self.$modalFooter.append(btnDismiss);
+                    self.$modalContent.html('');
+                    self.$modalContent.append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
 
-                    $("#btnClose").click(function () {
+                    self.$btnClose.click(function () {
                         window.location.replace("/Customer");
                     });
                 },
             });
         },
+        clearInputs: function () {
+            var self = this;
+            self.$FirstName.val('');
+            self.$LastName.val('');
+            self.$MobileNumber.val('');
+            self.$City.val('');
+            self.$IsActive.val('false');
+        },
         formValidate: function () {
             var self = this;
-            debugger;
             var ctr = 0;
             var errorCount = 0;
             var requiredErrors = [];
@@ -290,17 +326,18 @@ $(document).ready(function () {
                     },
                 },
                 invalidHandler: function () {
-                    $("#errorMessage").empty();
-                    $("#errorMessage").css("background-color", "");
+                    self.$divErrorMessage.empty();
+                    self.$divErrorMessage.removeClass("alert alert-danger");
                     errorCount = validator.numberOfInvalids();
                 },
                 errorPlacement: function (error, element) {
                     ctr++;
+                    debugger;
                     if ($(error).text().indexOf('required') < 0) {
-                        otherErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '.</h5></span> <br />');
+                        otherErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
                     }
                     else {
-                        requiredErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '.</h5></span> <br />');
+                        requiredErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
                     }
 
                     if (ctr == errorCount) {
@@ -308,18 +345,18 @@ $(document).ready(function () {
                         if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
                             requiredErrors = [];
                             otherErrors = [];
-                            self.$divErrorMessage.append('<span class=\"invalid\"><h5>Highlighted fields are required.</h5></span><br />');
-                            self.$divErrorMessage.css({ "background-color": "rgba(183, 2, 2, 0.08)" });
+                            self.$divErrorMessage.append('<span class=\"invalid\"><h5>All fields are required.</h5></span>');
+                            self.$divErrorMessage.addClass("alert alert-danger");
 
                         }
                         else if (requiredErrors.length == 1) {
                             self.$divErrorMessage.append(requiredErrors);
-                            self.$divErrorMessage.css({ "background-color": "rgba(183, 2, 2, 0.08)" });
+                            self.$divErrorMessage.addClass("alert alert-danger");
 
                         }
                         else if (otherErrors.length == 1) {
                             self.$divErrorMessage.append(otherErrors);
-                            self.$divErrorMessage.css({ "background-color": "rgba(183, 2, 2, 0.08)" });
+                            self.$divErrorMessage.addClass("alert alert-danger");
 
                         }
 
@@ -331,8 +368,89 @@ $(document).ready(function () {
                 }
             });
         },
-    }
+        textOnly: function (input) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Space'];
+            const letterPattern = /^[a-zA-Z\s]$/;
 
+            input.on('keydown', function (e) {
+                // Allow control keys
+                if (allowedKeys.includes(e.key)) {
+                    return true;
+                }
+
+                // Allow letters and spaces only
+                if (!letterPattern.test(e.key)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Clean invalid characters on paste
+            input.on('paste', function (e) {
+                e.preventDefault();
+                const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                const cleanedText = text.replace(/[^a-zA-Z\s]/g, '');
+                $(this).val(cleanedText);
+            });
+        },
+        numbersOnly: function (input) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+            const numberPattern = /^[0-9]$/;
+
+            input.on('keydown', function (e) {
+                // Allow control keys
+                if (allowedKeys.includes(e.key)) {
+                    return true;
+                }
+
+                // Allow numbers only
+                if (!numberPattern.test(e.key)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Clean invalid characters on paste
+            input.on('paste', function (e) {
+                e.preventDefault();
+                const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                const cleanedText = text.replace(/[^0-9]/g, '');
+                $(this).val(cleanedText);
+            });
+        },
+        formatDate: function (dateToFormat) {
+            try {
+                // Handle invalid input
+                if (!dateToFormat) {
+                    console.warn('Invalid date provided:', dateToFormat);
+                    return '';
+                }
+
+                const dateObject = new Date(dateToFormat);
+
+                // Check for invalid date
+                if (isNaN(dateObject.getTime())) {
+                    console.warn('Invalid date provided:', dateToFormat);
+                    return '';
+                }
+
+                // Use modern Intl API for localized date formatting
+                return new Intl.DateTimeFormat('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                }).format(dateObject);
+
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return '';
+            }
+        }
+    }
     var InitialiseCustomerObjectTask = function () {
         var customerObjectTask = Object.create(CustomerObjectTask);
         customerObjectTask.init();
@@ -341,195 +459,3 @@ $(document).ready(function () {
     InitialiseCustomerObjectTask();
 
 });
-
-
-$(function () {
-
-    DecimalOnly($("#txtDosage"));
-    NameOnly($("#txtDosage"));
-    NameOnly($("#txtPatients"));
-
-    var successMessage = '';
-    //Added Anti-forgery Token
-    var token = $('input[name="__RequestVerificationToken"]').val();
-    var headers = {};
-    headers['RequestVerificationToken'] = token;
-    var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
-
-    // $('a[id^="btnEdit"]').click(function () {
-    //     debugger;
-    //     pageName = "Edit";
-    //     submitFormURL = editActionURL;
-    //     customerID = $(this).attr('value');
-    //     var form_data = new FormData();
-    //     form_data.append("id", customerID)
-
-    //     $.ajax({
-    //         url: "/Customer/JsonDetails",
-    //         type: "POST",
-    //         //data: JSON.stringify(inputVal),
-    //         data: form_data,
-    //         headers: headers,
-    //         //dataType: "json",
-    //         contentType: false,
-    //         processData: false,
-    //         success: function (data) {
-    //             if (data.isSuccess) {
-    //                 //debugger;
-    //                 $("#edtFirstName").val(data.result.firstName);
-    //                 $("#edtLastName").val(data.result.lastName);
-    //                 $("#edtFullName").val(data.result.fullName);
-    //                 $("#edtMobileNumber").val(data.result.mobileNumber);
-    //                 $("#edtCity").val(data.result.city);
-    //                 $("#edtDateCreated").val(data.result.dateCreated);
-    //                 $("#edtCreatedBy").val(data.result.createdBy);
-    //                 $("#edtTimestamp").val(data.result.timestamp);
-    //                 $("#edtUserID").val(data.result.userID);
-    //                 $("#edtIsActive").prop("checked", data.result.isActive);
-
-    //             } else {
-    //                 if (data.isListResult) {
-    //                     var msg = "";
-
-    //                     for (var i = 0; i < data.result.length; i++) {
-    //                         msg += "Error : " + data.result[i] + "\n";
-    //                     }
-
-    //                     $("#modalFooter").html('')
-    //                     $("#modalFooter").append(btnDismiss);
-    //                     $("#modalContent").html('');
-    //                     $("#modalContent").append('<label>' + msg + '</label>');
-
-    //                     $("#btnClose").click(function () {
-    //                         window.location.replace("/Customer");
-    //                     });
-    //                 }
-    //                 else {
-
-    //                     $("#modalFooter").html('')
-    //                     $("#modalFooter").append(btnDismiss);
-    //                     $("#modalContent").html('');
-    //                     $("#modalContent").append('<label> Error: ' + data.result + '</label>');
-
-    //                     $("#btnClose").click(function () {
-    //                         window.location.replace("/Customer");
-    //                     });
-    //                 }
-    //             }
-    //         },
-    //         error: function (jqXHR, textStatus, errorThrown) {
-    //             $("#modalFooter").html('')
-    //             $("#modalFooter").append(btnDismiss);
-    //             $("#modalContent").html('');
-    //             $("#modalContent").append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
-
-    //             $("#btnClose").click(function () {
-    //                 setTimeout(function () {
-    //                     window.location.replace("/Customer");
-    //                 }, 1000);
-    //             });
-    //         },
-    //     });
-    // });
-
-});
-
-// function FormValidation() {
-
-//     // jQuery.validator.addMethod("DecimalFormat", function (value, element, params) {
-//     //     return this.optional(element) || /^\d{0,3}(\.\d{0,4})?$/i.test(value);
-//     // }, false);
-
-//     var ctr = 0;
-//     var errorCount = 0;
-//     var requiredErrors = [];
-//     var otherErrors = []
-//     validator = $("#CreateCustomerForm").validate({
-//         errorElement: "label",
-//         errorClass: "errMessage",
-//         onfocusout: false,
-//         onkeyup: false,
-//         onclick: false,
-//         ignore: [], //to still validate the hidden fields
-//         rules: {
-//             txtDosage: {
-//                 required: true
-//             },
-//             txtDrug: {
-//                 required: true
-//             },
-//             txtPatients: {
-//                 required: true
-//             },
-//         },
-//         messages: {
-//             txtDosage: {
-//                 required: 'Dosage is required.'
-//             },
-//             txtDrug: {
-//                 required: 'Drug is required.'
-//             },
-//             txtPatients: {
-//                 required: 'Patient name is required.'
-//             },
-
-//         },
-//         invalidHandler: function () {
-//             $("#errorMessage").empty();
-//             $("#errorMessage").css("background-color", "");
-//             errorCount = validator.numberOfInvalids();
-//         },
-//         errorPlacement: function (error, element) {
-//             ctr++;
-//             if ($(error).text().indexOf('required') < 0) {
-//                 otherErrors.push('<label class=\"errMessage\"><h5>' + $(error).text() + '.</h5></label> <br />');
-//             }
-//             else {
-//                 requiredErrors.push('<label class=\"errMessage\"><h5>' + $(error).text() + '.</h5></label> <br />');
-//             }
-
-//             if (ctr == errorCount) {
-
-//                 if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
-//                     requiredErrors = [];
-//                     otherErrors = [];
-//                     $("#divErrorMessage").append('<label class=\"errMessage\"><h5>Highlighted fields are required.</h5></label><br />');
-//                     $("#divErrorMessage").css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-
-//                 }
-//                 else if (requiredErrors.length == 1) {
-//                     $("#divErrorMessage").append(requiredErrors);
-//                     $("#divErrorMessage").css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-
-//                 }
-//                 else if (otherErrors.length == 1) {
-//                     $("#divErrorMessage").append(otherErrors);
-//                     $("#divErrorMessage").css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-
-//                 }
-
-//                 requiredErrors = [];
-//                 otherErrors = [];
-//                 ctr = 0;
-//             }
-
-//         }
-
-//     });
-// }
-
-function DecimalOnly(textbox) {
-    textbox.keydown(function (e) {
-        if ("" + /^[^0-9.]$/.test(e.key) == "true") {
-            e.preventDefault();
-        }
-    });
-}
-
-function NameOnly(textbox) {
-    textbox.keydown(function (e) {
-        if ("" + /^[!@#$%^&*()+=`~?><,\"/\\:;\]\[{}|•√π÷×¶∆£¢€¥°©®™℅¡¿_]$/.test(e.key) == "true") {
-            e.preventDefault();
-        }
-    });
-}
