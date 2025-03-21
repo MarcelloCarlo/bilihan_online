@@ -113,25 +113,23 @@ $(document).ready(function () {
             var self = this;
 
             self.$btnCreate.on('click', function () {
-                customerID = "";
                 pageName = "Create";
                 submitFormURL = addActionURL;
+
                 self.declaration();
                 self.formValidate();
                 self.clearInputs();
-
             });
 
             self.$btnEdit.on('click', function () {
-
                 pageName = "Index";
                 submitFormURL = getActionURL;
                 customerID = $(this).attr('value');
                 var form_data = new FormData();
                 form_data.append("id", customerID);
+
                 self.declaration();
                 self.formValidate();
-
                 self.setAjaxSendEvent(form_data);
             });
 
@@ -142,11 +140,13 @@ $(document).ready(function () {
                 self.setSubmitEvent();
             });
 
-            self.$btnEdtSubmit.on('click', function () {
+            self.$btnEdtSubmit.on('click', function (e) {
+                e.preventDefault();
+
                 pageName = "Edit"
                 submitFormURL = editActionURL;
-                self.setSubmitEvent();
 
+                self.setSubmitEvent();
             });
 
         },
@@ -176,7 +176,6 @@ $(document).ready(function () {
                     }
 
                     self.setAjaxSendEvent(form_data);
-
                 });
 
             } else {
@@ -205,7 +204,7 @@ $(document).ready(function () {
                             self.$modalContent.html('');
                             self.$modalContent.append('<label>' + successMessage + '</label>');
 
-                            $("#btnClose").click(function () {
+                            self.$btnClose.click(function () {
                                 window.location.replace("/Customer");
                             });
                         }
@@ -267,6 +266,9 @@ $(document).ready(function () {
         },
         clearInputs: function () {
             var self = this;
+
+            customerID = "";
+
             self.$FirstName.val('');
             self.$LastName.val('');
             self.$MobileNumber.val('');
@@ -280,7 +282,6 @@ $(document).ready(function () {
             var requiredErrors = [];
             var otherErrors = []
             validator = self.$CustomerForm.validate({
-                debug: true,
                 errorElement: "span",
                 errorClass: "invalid",
                 onfocusout: false,
@@ -332,7 +333,7 @@ $(document).ready(function () {
                 },
                 errorPlacement: function (error, element) {
                     ctr++;
-                    debugger;
+
                     if ($(error).text().indexOf('required') < 0) {
                         otherErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
                     }

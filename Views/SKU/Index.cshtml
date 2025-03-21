@@ -50,8 +50,7 @@
                     @(item.IsActive ? "TRUE" : "FALSE")
                 </td>
                 <td class="w-25">
-                    <img src="@Html.DisplayFor(modelItem => item.ProductImageString)"
-                        class="img-fluid img-thumbnail" />
+                    <img src="@Html.DisplayFor(modelItem => item.ProductImageString)" class="img-fluid img-thumbnail" />
                 </td>
                 <td>
                     @{
@@ -80,24 +79,27 @@
                         <form class="row" id="CreateSKUForm" enctype="multipart/form-data">
                             @Html.AntiForgeryToken()
                             <div class="form-group">
+                                <div id="divErrorMessage"></div>
+                            </div>
+                            <div class="form-group">
                                 <label for="Name" class="control-label">Name</label>
-                                <input id="Name" class="form-control" />
+                                <input id="Name" class="form-control" name="Name" required/>
                                 <span id="spanName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="Code" class="control-label">Code</label>
-                                <input id="Code" class="form-control" />
+                                <input id="Code" class="form-control" name="Code" required/>
                                 <span id="spanCode" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="UnitPrice" class="control-label">Unit Price</label>
-                                <input id="UnitPrice" class="form-control" />
+                                <input id="UnitPrice" class="form-control" name="UnitPrice" type="number" required/>
                                 <span id="spanUnitPrice" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="ProductImageHolder" class="control-label">Image File</label>
                                 <input id="ProductImageHolder" class="form-control" type="file"
-                                    accept="image/jpg, image/jpeg, image/png" />
+                                    accept="image/jpg, image/jpeg, image/png" name="ProductImageHolder" required/>
                                 <span id="spanProductImageHolder" class="text-danger"></span>
                             </div>
                             <div class="form-group">
@@ -111,9 +113,8 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="btnSubmit">Save</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="btnSubmit" data-bs-toggle="modal"
-                    data-bs-target="#confirmationModal">Submit</button>
             </div>
         </div>
     </div>
@@ -131,21 +132,23 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-12">
-
                         <form class="row" id="EditSKUForm" enctype="multipart/form-data">
                             <div class="form-group">
+                                <div id="edtdivErrorMessage"></div>
+                            </div>
+                            <div class="form-group">
                                 <label for="edtName" class="control-label">Name</label>
-                                <input id="edtName" class="form-control" />
+                                <input id="edtName" class="form-control" name="Name" required/>
                                 <span id="edtspanName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="edtCode" class="control-label">Code</label>
-                                <input id="edtCode" class="form-control" />
+                                <input id="edtCode" class="form-control" name="Code" required/>
                                 <span id="edtspanCode" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="edtUnitPrice" class="control-label">Unit Price</label>
-                                <input id="edtUnitPrice" class="form-control" />
+                                <input id="edtUnitPrice" class="form-control" name="UnitPrice" type="number" required/>
                                 <span id="edtspanUnitPrice" class="text-danger"></span>
                             </div>
                             <div class="form-group">
@@ -159,7 +162,7 @@
                                             <div class="card-body">
                                                 <h5 for="edtProductImageHolder" class="control-label">Replace Image</h5>
                                                 <input id="edtProductImageHolder" class="form-control" type="file"
-                                                    accept="image/jpg, image/jpeg, image/png" />
+                                                    accept="image/jpg, image/jpeg, image/png" name="ProductImageHolder"/>
                                                 <span id="edtspanProductImageHolder" class="text-danger"></span>
                                             </div>
                                         </div>
@@ -194,9 +197,8 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="btnEdtSubmit">Save</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="btnEdtSubmit" data-bs-toggle="modal"
-                    data-bs-target="#confirmationModal">Submit</button>
             </div>
         </div>
     </div>
