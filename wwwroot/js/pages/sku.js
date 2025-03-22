@@ -1,493 +1,513 @@
 $(document).ready(function () {
-    var skuID = "";
-    var pageName = "Index";
-    var submitFormURL = "";
-    var headers = {};
-    var successMessage = "";
-    var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
+	var skuID = "";
+	var pageName = "Index";
+	var submitFormURL = "";
+	var headers = {};
+	var successMessage = "";
+	var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
 
-	$.validator.addMethod('extension', function(value, element, param) {
-        param = typeof param === 'string' ? param.replace(/,/g, '|') : 'png|jpe?g';
-        return this.optional(element) || value.match(new RegExp('.(' + param + ')$', 'i'));
-    }, 'Please upload a valid image file (jpg, jpeg, or png).');
+	$.validator.addMethod('extension', function (value, element, param) {
+		param = typeof param === 'string' ? param.replace(/,/g, '|') : 'png|jpe?g';
+		return this.optional(element) || value.match(new RegExp('.(' + param + ')$', 'i'));
+	}, 'Please upload a valid image file (jpg, jpeg, or png).');
 
-    $.validator.addMethod('filesize', function(value, element, param) {
-        return this.optional(element) || (element.files[0].size <= param * 1024 * 1024);
-    }, 'File size must be less than {0} MB');
+	$.validator.addMethod('filesize', function (value, element, param) {
+		return this.optional(element) || (element.files[0].size <= param * 1024 * 1024);
+	}, 'File size must be less than {0} MB');
 
 
-    var SKUObjectTask = {
+	/**
+	 * @namespace SKUObjectTask
+	 * @description Handles SKU (Stock Keeping Unit) management operations including creation, editing, and form validation
+	 * @property {Function} init - Initializes the SKU management functionality
+	 * @property {Function} declaration - Declares and initializes jQuery selectors and form elements
+	 * @property {Function} setEvent - Sets up event handlers for various UI interactions
+	 * @property {Function} setSubmitEvent - Handles form submission logic and validation
+	 * @property {Function} setAjaxSendEvent - Manages AJAX requests for form submission
+	 * @property {Function} clearInputs - Clears form input fields
+	 * @property {Function} formValidate - Implements form validation rules and error handling
+	 * @property {Function} textOnly - Restricts input to text characters only
+	 * @property {Function} decimalOnly - Restricts input to decimal numbers only
+	 * @property {Function} formatDate - Formats date strings to localized format
+	 * 
+	 * @requires jQuery
+	 * @requires jQuery.validate
+	 * 
+	 * @example
+	 * SKUObjectTask.init();
+	 */
+	var SKUObjectTask = {
 
-        init: function () {
-            var self = this;
-            self.declaration();
-            self.setEvent();
-        },
-        declaration: function () {
-            var self = this;
+		init: function () {
+			var self = this;
+			self.declaration();
+			self.setEvent();
+		},
+		declaration: function () {
+			var self = this;
 
-            self.$Token = $('input[name="__RequestVerificationToken"]');
-            self.$confirmationModal = $("#confirmationModal");
-            self.$modalContent = $("#modalContent");
-            self.$modalFooter = $("#modalFooter");
-            self.$btnSubmit = $("#btnSubmit");
-            self.$btnEdtSubmit = $("#btnEdtSubmit");
-            self.$btnConfirm = $("#btnConfirm");
-            self.$btnClose = $("#btnClose");
-            self.$btnCreate = $("#btnCreate");
-            self.$btnEdit = $('a[id^="btnEdit"]');
+			self.$Token = $('input[name="__RequestVerificationToken"]');
+			self.$confirmationModal = $("#confirmationModal");
+			self.$modalContent = $("#modalContent");
+			self.$modalFooter = $("#modalFooter");
+			self.$btnSubmit = $("#btnSubmit");
+			self.$btnEdtSubmit = $("#btnEdtSubmit");
+			self.$btnConfirm = $("#btnConfirm");
+			self.$btnClose = $("#btnClose");
+			self.$btnCreate = $("#btnCreate");
+			self.$btnEdit = $('a[id^="btnEdit"]');
 
-            switch (pageName) {
-                case "Create":
-                    self.$modalContent.html('');
-                    self.$modalContent.append('<label>Are you sure you want to add this record?</label>');
-                    successMessage = 'Record successfully saved.';
+			switch (pageName) {
+				case "Create":
+					self.$modalContent.html('');
+					self.$modalContent.append('<label>Are you sure you want to add this record?</label>');
+					successMessage = 'Record successfully saved.';
 
-                    self.$Name = $("#Name");
-                    self.$Code = $("#Code");
-                    self.$UnitPrice = $("#UnitPrice");
+					self.$Name = $("#Name");
+					self.$Code = $("#Code");
+					self.$UnitPrice = $("#UnitPrice");
 
-                    self.textOnly(self.$Name);
-                    self.textOnly(self.$Code);
-                    self.decimalOnly(self.$UnitPrice);
+					self.textOnly(self.$Name);
+					self.textOnly(self.$Code);
+					self.decimalOnly(self.$UnitPrice);
 
-                    self.$ProductImageHolder = $("#ProductImageHolder");
-                    self.$IsActive = $("#IsActive");
+					self.$ProductImageHolder = $("#ProductImageHolder");
+					self.$IsActive = $("#IsActive");
 
-                    self.$SKUForm = $("#CreateSKUForm");
-                    self.$divErrorMessage = $("#divErrorMessage");
-
-					self.$divErrorMessage.empty(); // Clear previous errors
-					self.$divErrorMessage.removeClass("alert alert-danger");
-                    break;
-                case "Edit":
-                    self.$modalContent.html('');
-                    self.$modalContent.append('<label>Are you sure you want to update this record?</label>');
-                    successMessage = 'Record successfully updated.';
-
-                    self.$Name = $("#edtName");
-                    self.$Code = $("#edtCode");
-                    self.$UnitPrice = $("#edtUnitPrice");
-
-                    self.textOnly(self.$Name);
-                    self.textOnly(self.$Code);
-                    self.decimalOnly(self.$UnitPrice);
-
-                    self.$ProductImageHolder = $("#edtProductImageHolder");
-                    self.$ProductImageString = $("#edtProductImageString");
-                    self.$IsActive = $("#edtIsActive");
-
-                    self.$DateCreated = $("#edtDateCreated");
-                    self.$CreatedBy = $("#edtCreatedBy")
-                    self.$Timestamp = $("#edtTimestamp");
-                    self.$UserID = $("#edtUserID");
-
-                    self.$SKUForm = $("#EditSKUForm");
-                    self.$divErrorMessage = $("#edtdivErrorMessage");
+					self.$SKUForm = $("#CreateSKUForm");
+					self.$divErrorMessage = $("#divErrorMessage");
 
 					self.$divErrorMessage.empty(); // Clear previous errors
 					self.$divErrorMessage.removeClass("alert alert-danger");
-                    break;
-                default:
-                    self.$Name = $("#edtName");
-                    self.$Code = $("#edtCode");
-                    self.$UnitPrice = $("#edtUnitPrice");
+					break;
+				case "Edit":
+					self.$modalContent.html('');
+					self.$modalContent.append('<label>Are you sure you want to update this record?</label>');
+					successMessage = 'Record successfully updated.';
 
-                    self.textOnly(self.$Name);
-                    self.textOnly(self.$Code);
-                    self.decimalOnly(self.$UnitPrice);
+					self.$Name = $("#edtName");
+					self.$Code = $("#edtCode");
+					self.$UnitPrice = $("#edtUnitPrice");
 
-                    self.$ProductImageHolder = $("#edtProductImageHolder");
-                    self.$ProductImageString = $("#edtProductImageString");
-                    self.$IsActive = $("#edtIsActive");
+					self.textOnly(self.$Name);
+					self.textOnly(self.$Code);
+					self.decimalOnly(self.$UnitPrice);
 
-                    self.$DateCreated = $("#edtDateCreated");
-                    self.$CreatedBy = $("#edtCreatedBy")
-                    self.$Timestamp = $("#edtTimestamp");
-                    self.$UserID = $("#edtUserID");
+					self.$ProductImageHolder = $("#edtProductImageHolder");
+					self.$ProductImageString = $("#edtProductImageString");
+					self.$IsActive = $("#edtIsActive");
 
-                    self.$SKUForm = $("#EditSKUForm");
-                    self.$divErrorMessage = $("#edtdivErrorMessage");
+					self.$DateCreated = $("#edtDateCreated");
+					self.$CreatedBy = $("#edtCreatedBy")
+					self.$Timestamp = $("#edtTimestamp");
+					self.$UserID = $("#edtUserID");
+
+					self.$SKUForm = $("#EditSKUForm");
+					self.$divErrorMessage = $("#edtdivErrorMessage");
 
 					self.$divErrorMessage.empty(); // Clear previous errors
 					self.$divErrorMessage.removeClass("alert alert-danger");
-                    break;
-            }
+					break;
+				default:
+					self.$Name = $("#edtName");
+					self.$Code = $("#edtCode");
+					self.$UnitPrice = $("#edtUnitPrice");
 
-        },
-        setEvent: function () {
-            var self = this;
+					self.textOnly(self.$Name);
+					self.textOnly(self.$Code);
+					self.decimalOnly(self.$UnitPrice);
 
-            self.$btnCreate.on('click', function () {
-                pageName = "Create";
-                submitFormURL = addActionURL;
+					self.$ProductImageHolder = $("#edtProductImageHolder");
+					self.$ProductImageString = $("#edtProductImageString");
+					self.$IsActive = $("#edtIsActive");
 
-                self.declaration();
-                self.formValidate();
-                self.clearInputs();
-            });
+					self.$DateCreated = $("#edtDateCreated");
+					self.$CreatedBy = $("#edtCreatedBy")
+					self.$Timestamp = $("#edtTimestamp");
+					self.$UserID = $("#edtUserID");
 
-            self.$btnEdit.on('click', function () {
-                pageName = "Index";
-                submitFormURL = getActionURL;
-                skuID = $(this).attr('value');
-                var form_data = new FormData();
-                form_data.append("id", skuID);
+					self.$SKUForm = $("#EditSKUForm");
+					self.$divErrorMessage = $("#edtdivErrorMessage");
 
-                self.declaration();
+					self.$divErrorMessage.empty(); // Clear previous errors
+					self.$divErrorMessage.removeClass("alert alert-danger");
+					break;
+			}
+
+		},
+		setEvent: function () {
+			var self = this;
+
+			self.$btnCreate.on('click', function () {
+				pageName = "Create";
+				submitFormURL = addActionURL;
+
+				self.declaration();
+				self.formValidate();
+				self.clearInputs();
+			});
+
+			self.$btnEdit.on('click', function () {
+				pageName = "Index";
+				submitFormURL = getActionURL;
+				skuID = $(this).attr('value');
+				var form_data = new FormData();
+				form_data.append("id", skuID);
+
+				self.declaration();
 				self.formValidate();
 				self.setAjaxSendEvent(form_data);
-            });
+			});
 
-            //Submit action
-            self.$btnSubmit.on('click', function (e) {
-                e.preventDefault();
-
-				self.declaration();
-                self.setSubmitEvent();
-            });
-
-            self.$btnEdtSubmit.on('click', function (e) {
-                e.preventDefault();
-
-                pageName = "Edit"
-                submitFormURL = editActionURL;
+			//Submit action
+			self.$btnSubmit.on('click', function (e) {
+				e.preventDefault();
 
 				self.declaration();
-                self.setSubmitEvent();
-            });
+				self.setSubmitEvent();
+			});
 
-            self.$ProductImageHolder.on('change', function () {
-                if (self.$ProductImageHolder[0].files && pageName !== "Create") {
+			self.$btnEdtSubmit.on('click', function (e) {
+				e.preventDefault();
 
-                    for (var i = 0; i < self.$ProductImageHolder[0].files.length; i++) {
+				pageName = "Edit"
+				submitFormURL = editActionURL;
 
-                        var file = self.$ProductImageHolder[0].files[i];
+				self.declaration();
+				self.setSubmitEvent();
+			});
 
-                        var reader = new FileReader();
-                        reader.onloadend = function () {
-                            self.$ProductImageString.attr('src', reader.result);
-                        }
-                        reader.readAsDataURL(file);
-                    }
-                }
+			self.$ProductImageHolder.on('change', function () {
+				if (self.$ProductImageHolder[0].files && pageName !== "Create") {
 
-            });
-        },
-        setSubmitEvent: function () {
-            var self = this;
+					for (var i = 0; i < self.$ProductImageHolder[0].files.length; i++) {
 
-            if (self.$SKUForm.valid()) {
-                self.$divErrorMessage.empty();
-                self.$divErrorMessage.removeClass("alert alert-danger");
-                self.$confirmationModal.modal('show');
+						var file = self.$ProductImageHolder[0].files[i];
 
-                self.$btnConfirm.on('click', function () {
+						var reader = new FileReader();
+						reader.onloadend = function () {
+							self.$ProductImageString.attr('src', reader.result);
+						}
+						reader.readAsDataURL(file);
+					}
+				}
 
-                    var inputVal = {
-                        Id: (skuID == '' || skuID == null ? '0' : skuID),
-                        Name: self.$Name.val().trim(),
-                        Code: self.$Code.val().trim(),
-                        UnitPrice: self.$UnitPrice.val().trim(),
-                        IsActive: self.$IsActive.is(":checked") ? "true" : "false"
-                    };
+			});
+		},
+		setSubmitEvent: function () {
+			var self = this;
 
-                    var ProductImageHolder = self.$ProductImageHolder[0].files;
-                    var form_data = new FormData();
+			if (self.$SKUForm.valid()) {
+				self.$divErrorMessage.empty();
+				self.$divErrorMessage.removeClass("alert alert-danger");
+				self.$confirmationModal.modal('show');
 
-                    for (var key in inputVal) {
-                        form_data.append(key, inputVal[key]);
-                    }
-                    form_data.append("ProductImageHolder", ProductImageHolder[0]);
+				self.$btnConfirm.on('click', function () {
 
-                    self.setAjaxSendEvent(form_data);
+					var inputVal = {
+						Id: (skuID == '' || skuID == null ? '0' : skuID),
+						Name: self.$Name.val().trim(),
+						Code: self.$Code.val().trim(),
+						UnitPrice: self.$UnitPrice.val().trim(),
+						IsActive: self.$IsActive.is(":checked") ? "true" : "false"
+					};
 
-                });
+					var ProductImageHolder = self.$ProductImageHolder[0].files;
+					var form_data = new FormData();
 
-            } else {
-                self.$divErrorMessage.empty(); // Clear previous errors
-                self.$divErrorMessage.removeClass("alert alert-danger");
-                self.$SKUForm.validate().showErrors(); // Show validation errors
-            }
-        },
-        setAjaxSendEvent: function (inputVal) {
-            var self = this;
+					for (var key in inputVal) {
+						form_data.append(key, inputVal[key]);
+					}
+					form_data.append("ProductImageHolder", ProductImageHolder[0]);
 
-            headers['RequestVerificationToken'] = self.$Token.val();
+					self.setAjaxSendEvent(form_data);
 
-            $.ajax({
-                url: submitFormURL,
-                type: "POST",
-                data: inputVal,
-                headers: headers,
-                contentType: false,
-                processData: false,
-                success: function (data) {
-					
-                    if (data.isSuccess) {
-                        if (pageName == "Create" || pageName == "Edit") {
+				});
 
-                            self.$modalFooter.html('')
-                            self.$modalFooter.append(btnDismiss);
-                            self.$modalContent.html('');
-                            self.$modalContent.append('<label>' + successMessage + '</label>');
+			} else {
+				self.$divErrorMessage.empty(); // Clear previous errors
+				self.$divErrorMessage.removeClass("alert alert-danger");
+				self.$SKUForm.validate().showErrors(); // Show validation errors
+			}
+		},
+		setAjaxSendEvent: function (inputVal) {
+			var self = this;
 
-                            $("#btnClose").on('click', function () {
-                                window.location.replace("/SKU");
-                            });
-                        }
-                        else {
-                            self.$Name.val(data.result.name);
-                            self.$Code.val(data.result.code);
-                            self.$UnitPrice.val(data.result.unitPrice);
-                            self.$ProductImageHolder.val(data.result.productImageHolder);
-                            self.$ProductImageString.attr('src', data.result.productImageString);
+			headers['RequestVerificationToken'] = self.$Token.val();
 
-                            self.$DateCreated.val(self.formatDate(data.result.dateCreated));
-                            self.$CreatedBy.val(data.result.createdBy);
-                            self.$Timestamp.val(self.formatDate(data.result.timestamp));
-                            self.$UserID.val(data.result.userID);
-                            self.$IsActive.prop("checked", data.result.isActive);
-                        }
+			$.ajax({
+				url: submitFormURL,
+				type: "POST",
+				data: inputVal,
+				headers: headers,
+				contentType: false,
+				processData: false,
+				success: function (data) {
 
-                    } else {
-                        if (data.isListResult) {
-                            var msg = "";
+					if (data.isSuccess) {
+						if (pageName == "Create" || pageName == "Edit") {
 
-                            for (var i = 0; i < data.result.length; i++) {
-                                msg += "Error : " + data.result[i] + "\n";
-                            }
+							self.$modalFooter.html('')
+							self.$modalFooter.append(btnDismiss);
+							self.$modalContent.html('');
+							self.$modalContent.append('<label>' + successMessage + '</label>');
 
-                            self.$modalFooter.html('')
-                            self.$modalFooter.append(btnDismiss);
-                            self.$modalContent.html('');
-                            self.$modalContent.append('<label>' + msg + '</label>');
+							$("#btnClose").on('click', function () {
+								window.location.replace("/SKU");
+							});
+						}
+						else {
+							self.$Name.val(data.result.name);
+							self.$Code.val(data.result.code);
+							self.$UnitPrice.val(data.result.unitPrice);
+							self.$ProductImageHolder.val(data.result.productImageHolder);
+							self.$ProductImageString.attr('src', data.result.productImageString);
 
-                            $("#btnClose").on('click', function () {
-                                window.location.replace("/SKU");
-                            });
-                        }
-                        else {
+							self.$DateCreated.val(self.formatDate(data.result.dateCreated));
+							self.$CreatedBy.val(data.result.createdBy);
+							self.$Timestamp.val(self.formatDate(data.result.timestamp));
+							self.$UserID.val(data.result.userID);
+							self.$IsActive.prop("checked", data.result.isActive);
+						}
 
-                            self.$modalFooter.html('')
-                            self.$modalFooter.append(btnDismiss);
-                            self.$modalContent.html('');
-                            self.$modalContent.append('<label> Error: ' + data.result + '</label>');
+					} else {
+						if (data.isListResult) {
+							var msg = "";
 
-                            $("#btnClose").on('click', function () {
-                                window.location.replace("/SKU");
-                            });
-                        }
-                    }
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    self.$modalFooter.html('')
-                    self.$modalFooter.append(btnDismiss);
-                    self.$modalContent.html('');
-                    self.$modalContent.append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
+							for (var i = 0; i < data.result.length; i++) {
+								msg += "Error : " + data.result[i] + "\n";
+							}
 
-                    $("#btnClose").on('click', function () {
-                        window.location.replace("/SKU");;
-                    });
-                },
-            });
-        }, 
-        clearInputs: function () {
-            var self = this;
+							self.$modalFooter.html('')
+							self.$modalFooter.append(btnDismiss);
+							self.$modalContent.html('');
+							self.$modalContent.append('<label>' + msg + '</label>');
 
-            skuID = "";
-            
-            self.$divErrorMessage.empty();
-            self.$divErrorMessage.removeClass("alert alert-danger");
+							$("#btnClose").on('click', function () {
+								window.location.replace("/SKU");
+							});
+						}
+						else {
 
-            self.$Name.val('');
-            self.$Code.val('');
-            self.$UnitPrice.val(0);
-            self.$ProductImageHolder.val('');
-        },
-        formValidate: function () {
-            var self = this;
-            var ctr = 0;
-            var errorCount = 0;
-            var requiredErrors = [];
-            var otherErrors = []
-            var uploadRequired = pageName === "Create" ? true : false;
-            validator = self.$SKUForm.validate({
-                errorElement: "span",
-                errorClass: "invalid",
-                onfocusout: false,
-                onkeyup: false,
-                onclick: false,
-                ignore: [], //to still validate the hidden fields
-                rules: {
-                    Name: {
-                        required: true,
-                        minlength: 2
-                    },
-                    Code: {
-                        required: true,
-                        minlength: 2
-                    },
-                    UnitPrice: {
-                        required: true,
-                    },
-                    ProductImageHolder: {
-                        required: uploadRequired,
+							self.$modalFooter.html('')
+							self.$modalFooter.append(btnDismiss);
+							self.$modalContent.html('');
+							self.$modalContent.append('<label> Error: ' + data.result + '</label>');
+
+							$("#btnClose").on('click', function () {
+								window.location.replace("/SKU");
+							});
+						}
+					}
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					self.$modalFooter.html('')
+					self.$modalFooter.append(btnDismiss);
+					self.$modalContent.html('');
+					self.$modalContent.append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
+
+					$("#btnClose").on('click', function () {
+						window.location.replace("/SKU");;
+					});
+				},
+			});
+		},
+		clearInputs: function () {
+			var self = this;
+
+			skuID = "";
+
+			self.$divErrorMessage.empty();
+			self.$divErrorMessage.removeClass("alert alert-danger");
+
+			self.$Name.val('');
+			self.$Code.val('');
+			self.$UnitPrice.val(0);
+			self.$ProductImageHolder.val('');
+		},
+		formValidate: function () {
+			var self = this;
+			var ctr = 0;
+			var errorCount = 0;
+			var requiredErrors = [];
+			var otherErrors = []
+			var uploadRequired = pageName === "Create" ? true : false;
+			validator = self.$SKUForm.validate({
+				errorElement: "span",
+				errorClass: "invalid",
+				onfocusout: false,
+				onkeyup: false,
+				onclick: false,
+				ignore: [], //to still validate the hidden fields
+				rules: {
+					Name: {
+						required: true,
+						minlength: 2
+					},
+					Code: {
+						required: true,
+						minlength: 2
+					},
+					UnitPrice: {
+						required: true,
+					},
+					ProductImageHolder: {
+						required: uploadRequired,
 						extension: "jpg|jpeg|png",
-						filesize: 2 
-                    },
-                },
-                messages: {
-                    FirstName: {
-                        required: "Name is required.",
-                        minlength: "Name requires at least 2 letters."
-                    },
-                    Code: {
-                        required: "Code is required.",
-                        minlength: "Code requires at least 2 letters."
-                    },
-                    UnitPrice: {
-                        required: "Unit Price is required.",
-                    },
-                    ProductImageHolder: {
-                        required: "Image File is required.",
-                        extension: "Image File must be in jpg, jpeg or png format.",
+						filesize: 2
+					},
+				},
+				messages: {
+					FirstName: {
+						required: "Name is required.",
+						minlength: "Name requires at least 2 letters."
+					},
+					Code: {
+						required: "Code is required.",
+						minlength: "Code requires at least 2 letters."
+					},
+					UnitPrice: {
+						required: "Unit Price is required.",
+					},
+					ProductImageHolder: {
+						required: "Image File is required.",
+						extension: "Image File must be in jpg, jpeg or png format.",
 						filesize: "Image File must not exceed 2MB."
 
-                    },
-                },
-                invalidHandler: function () {
-                    self.$divErrorMessage.empty();
-                    self.$divErrorMessage.removeClass("alert alert-danger");
-                    errorCount = validator.numberOfInvalids();
-                },
-                errorPlacement: function (error, element) {
-                    ctr++;
+					},
+				},
+				invalidHandler: function () {
+					self.$divErrorMessage.empty();
+					self.$divErrorMessage.removeClass("alert alert-danger");
+					errorCount = validator.numberOfInvalids();
+				},
+				errorPlacement: function (error, element) {
+					ctr++;
 
-                    if ($(error).text().indexOf('required') < 0) {
-                        otherErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
-                    }
-                    else {
-                        requiredErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
-                    }
+					if ($(error).text().indexOf('required') < 0) {
+						otherErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
+					}
+					else {
+						requiredErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
+					}
 
-                    if (ctr == errorCount) {
+					if (ctr == errorCount) {
 
-                        if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
-                            requiredErrors = [];
-                            otherErrors = [];
-                            self.$divErrorMessage.append('<span class=\"invalid\"><h5>All fields are required.</h5></span>');
-                            self.$divErrorMessage.addClass("alert alert-danger");
+						if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
+							requiredErrors = [];
+							otherErrors = [];
+							self.$divErrorMessage.append('<span class=\"invalid\"><h5>All fields are required.</h5></span>');
+							self.$divErrorMessage.addClass("alert alert-danger");
 
-                        }
-                        else if (requiredErrors.length == 1) {
-                            self.$divErrorMessage.append(requiredErrors);
-                            self.$divErrorMessage.addClass("alert alert-danger");
+						}
+						else if (requiredErrors.length == 1) {
+							self.$divErrorMessage.append(requiredErrors);
+							self.$divErrorMessage.addClass("alert alert-danger");
 
-                        }
-                        else if (otherErrors.length == 1) {
-                            self.$divErrorMessage.append(otherErrors);
-                            self.$divErrorMessage.addClass("alert alert-danger");
+						}
+						else if (otherErrors.length == 1) {
+							self.$divErrorMessage.append(otherErrors);
+							self.$divErrorMessage.addClass("alert alert-danger");
 
-                        }
+						}
 
-                        requiredErrors = [];
-                        otherErrors = [];
-                        ctr = 0;
-                    }
+						requiredErrors = [];
+						otherErrors = [];
+						ctr = 0;
+					}
 
-                }
-            });
-        },
-        textOnly: function (input) {
-            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Space'];
-            const letterPattern = /^[a-zA-Z0-9\s\-_\.\(\)\[\]]$/;
+				}
+			});
+		},
+		textOnly: function (input) {
+			const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Space'];
+			const letterPattern = /^[a-zA-Z0-9\s\-_\.\(\)\[\]]$/;
 
-            input.on('keydown', function (e) {
-                // Allow control keys
-                if (allowedKeys.includes(e.key)) {
-                    return true;
-                }
+			input.on('keydown', function (e) {
+				// Allow control keys
+				if (allowedKeys.includes(e.key)) {
+					return true;
+				}
 
-                // Allow letters and spaces only
-                if (!letterPattern.test(e.key)) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
+				// Allow letters and spaces only
+				if (!letterPattern.test(e.key)) {
+					e.preventDefault();
+					return false;
+				}
+			});
 
-            // Clean invalid characters on paste
-            input.on('paste', function (e) {
-                e.preventDefault();
-                const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
-                const cleanedText = text.replace(/[a-zA-Z0-9\s\-_\.\(\)\[\]]/g, '');
-                $(this).val(cleanedText);
-            });
-        },
-        decimalOnly: function (input) {
-            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-            const numberPattern = /^[0-9.]$/;
+			// Clean invalid characters on paste
+			input.on('paste', function (e) {
+				e.preventDefault();
+				const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+				const cleanedText = text.replace(/[a-zA-Z0-9\s\-_\.\(\)\[\]]/g, '');
+				$(this).val(cleanedText);
+			});
+		},
+		decimalOnly: function (input) {
+			const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+			const numberPattern = /^[0-9.]$/;
 
-            input.on('keydown', function (e) {
-                // Allow control keys
-                if (allowedKeys.includes(e.key)) {
-                    return true;
-                }
+			input.on('keydown', function (e) {
+				// Allow control keys
+				if (allowedKeys.includes(e.key)) {
+					return true;
+				}
 
-                // Allow numbers only
-                if (!numberPattern.test(e.key)) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
+				// Allow numbers only
+				if (!numberPattern.test(e.key)) {
+					e.preventDefault();
+					return false;
+				}
+			});
 
-            // Clean invalid characters on paste
-            input.on('paste', function (e) {
-                e.preventDefault();
-                const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
-                const cleanedText = text.replace(/[^0-9.]/g, '');
-                $(this).val(cleanedText);
-            });
-        },
-        formatDate: function (dateToFormat) {
-            try {
-                // Handle invalid input
-                if (!dateToFormat) {
-                    console.warn('Invalid date provided:', dateToFormat);
-                    return '';
-                }
+			// Clean invalid characters on paste
+			input.on('paste', function (e) {
+				e.preventDefault();
+				const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+				const cleanedText = text.replace(/[^0-9.]/g, '');
+				$(this).val(cleanedText);
+			});
+		},
+		formatDate: function (dateToFormat) {
+			try {
+				// Handle invalid input
+				if (!dateToFormat) {
+					console.warn('Invalid date provided:', dateToFormat);
+					return '';
+				}
 
-                const dateObject = new Date(dateToFormat);
+				const dateObject = new Date(dateToFormat);
 
-                // Check for invalid date
-                if (isNaN(dateObject.getTime())) {
-                    console.warn('Invalid date provided:', dateToFormat);
-                    return '';
-                }
+				// Check for invalid date
+				if (isNaN(dateObject.getTime())) {
+					console.warn('Invalid date provided:', dateToFormat);
+					return '';
+				}
 
-                // Use modern Intl API for localized date formatting
-                return new Intl.DateTimeFormat('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                }).format(dateObject);
+				// Use modern Intl API for localized date formatting
+				return new Intl.DateTimeFormat('en-GB', {
+					day: '2-digit',
+					month: '2-digit',
+					year: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: true
+				}).format(dateObject);
 
-            } catch (error) {
-                console.error('Error formatting date:', error);
-                return '';
-            }
-        }
-    }
+			} catch (error) {
+				console.error('Error formatting date:', error);
+				return '';
+			}
+		}
+	}
 
-    var InitialiseSKUObjectTask = function () {
-        var skuObjectTask = Object.create(SKUObjectTask);
-        skuObjectTask.init();
-    }
+	var InitialiseSKUObjectTask = function () {
+		var skuObjectTask = Object.create(SKUObjectTask);
+		skuObjectTask.init();
+	}
 
-    InitialiseSKUObjectTask();
+	InitialiseSKUObjectTask();
 
 });

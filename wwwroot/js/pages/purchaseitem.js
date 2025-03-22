@@ -1,11 +1,11 @@
-var customerID = "";
-var skuID = "";
-var skuPrice = 0;
-var orderItemID = "";
-var pageName = "Index";
-var submitFormURL = "";
-
 $(document).ready(function () {
+
+    var customerID = "";
+    var skuID = "";
+    var skuPrice = 0;
+    var orderItemID = "";
+    var pageName = "Index";
+    var submitFormURL = "";
 
     var headers = {};
     var successMessage = "";
@@ -38,14 +38,6 @@ $(document).ready(function () {
             self.$DeliveryDate = $("#DeliveryDate");
             self.$Status = $("#Status");
 
-            self.$SKUName = $("#SKUName");
-            self.$Quantity = $("#Quantity");
-            self.$SubTotal = $("#SubTotal");
-
-            self.$edtSKUName = $("#edtSKUName");
-            self.$edtQuantity = $("#edtQuantity");
-            self.$edtSubTotal = $("#edtSubTotal");
-
             self.$AmountDue = $("#AmountDue");
 
             switch (pageName) {
@@ -53,15 +45,23 @@ $(document).ready(function () {
                     self.$modalContent.html('');
                     self.$modalContent.append('<label>Are you sure you want to add this record?</label>');
                     successMessage = 'Record successfully saved.';
-                    FormValidation();
+
+                    self.$SKUName = $("#SKUName");
+                    self.$Quantity = $("#Quantity");
+                    self.$SubTotal = $("#SubTotal");
+
                     break;
                 case "Edit":
                     self.$modalContent.html('');
                     self.$modalContent.append('<label>Are you sure you want to update this record?</label>');
                     successMessage = 'Record successfully updated.';
-                    FormValidation();
+
+                    self.$SKUName = $("#edtSKUName");
+                    self.$Quantity = $("#edtQuantity");
+                    self.$SubTotal = $("#edtSubTotal");
+                    
                     break;
-                case "Index":
+                default:
                     if (orderID != 0 && orderID) {
                         submitFormURL = orderDetailsURL;
                         var form_data = new FormData();
@@ -107,7 +107,7 @@ $(document).ready(function () {
                 //else, throw an error
                 self.declaration();
                 self.$btnConfirm.on('click', function () {
-                    
+
                     if (pageName == "Create") {
                         var inputVal = {
                             PurchaseOrderModel: {
@@ -148,8 +148,8 @@ $(document).ready(function () {
                         submitFormURL = editActionURL;
                         var inputVal = {
                             ID: orderItemID,
-                            Quantity: self.$edtQuantity.val().trim(),
-                            Price: self.$edtSubTotal.val().trim()
+                            Quantity: self.$Quantity.val().trim(),
+                            Price: self.$SubTotal.val().trim()
                         }
 
                         var form_data = new FormData();
@@ -173,8 +173,8 @@ $(document).ready(function () {
                     submitFormURL = editActionURL;
                     var inputVal = {
                         ID: orderItemID,
-                        Quantity: self.$edtQuantity.val().trim(),
-                        Price: self.$edtSubTotal.val().trim()
+                        Quantity: self.$Quantity.val().trim(),
+                        Price: self.$SubTotal.val().trim()
                     }
 
                     var form_data = new FormData();
@@ -260,24 +260,24 @@ $(document).ready(function () {
                     self.$SubTotal.val(quantity * skuPrice);
 
                 }
-                
+
             });
 
-            self.$edtQuantity.on('keyup change', function () {
-                if (self.$edtQuantity.val().length <= 0) {
-                    self.$edtSubTotal.val(0);
+            self.$Quantity.on('keyup change', function () {
+                if (self.$Quantity.val().length <= 0) {
+                    self.$SubTotal.val(0);
                 }
                 else {
-                    var quantity = self.$edtQuantity.val();
-                    self.$edtSubTotal.val(quantity * skuPrice);
+                    var quantity = self.$Quantity.val();
+                    self.$SubTotal.val(quantity * skuPrice);
 
                 }
-                
+
             });
 
             self.$Status.on('keyup change', function () {
                 if (orderID != 0 && orderID) {
-                    
+
                     submitFormURL = orderUpdateStatus;
                     var inputVal = {
                         ID: (orderID == '' || orderID == null ? 0 : orderID),
@@ -299,7 +299,7 @@ $(document).ready(function () {
             var self = this;
 
             headers['RequestVerificationToken'] = self.$Token.val();
-            
+
             $.ajax({
                 url: submitFormURL,
                 type: "POST",
@@ -602,9 +602,9 @@ $(document).ready(function () {
                         skuPrice = data.result.skuid.unitPrice;
                         skuID = data.result.skuid.id;
 
-                        self.$edtSKUName.val(data.result.skuid.name);
-                        self.$edtQuantity.val(data.result.quantity);
-                        self.$edtSubTotal.val(data.result.price);
+                        self.$SKUName.val(data.result.skuid.name);
+                        self.$Quantity.val(data.result.quantity);
+                        self.$SubTotal.val(data.result.price);
 
                         self.declaration();
 
@@ -677,208 +677,4 @@ $(document).ready(function () {
     InitialisePurchaseItemObjectTask();
 
 });
-
-
-$(function () {
-
-    DecimalOnly($("#txtDosage"));
-    NameOnly($("#txtDosage"));
-    NameOnly($("#txtPatients"));
-
-    var successMessage = '';
-    //Added Anti-forgery Token
-    var token = $('input[name="__RequestVerificationToken"]').val();
-    var headers = {};
-    headers['RequestVerificationToken'] = token;
-    var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
-
-    //$('a[id^="btnEdit"]').on('click', function () {
-
-    //    pageName = "Edit";
-    //    submitFormURL = orderItemDetails;
-    //    orderItemID = $(this).attr('value');
-    //    var form_data = new FormData();
-    //    form_data.append("id", orderItemID)
-
-    //    $.ajax({
-    //        url: submitFormURL,
-    //        type: "POST",
-    //        //data: JSON.stringify(inputVal),
-    //        data: form_data,
-    //        headers: headers,
-    //        //dataType: "json",
-    //        contentType: false,
-    //        processData: false,
-    //        success: function (data) {
-    //            if (data.isSuccess) {
-
-    //                orderItemID = data.result.id;
-    //                skuPrice = data.result.skuid.unitPrice;
-    //                skuID = data.result.skuid.id;
-
-    //                $("#edtSKUName").val(data.result.skuid.name);
-
-    //                $("#edtQuantity").val(data.result.quantity);
-    //                $("#edtSubTotal").val(data.result.price);
-
-    //            } else {
-    //                if (data.isListResult) {
-    //                    var msg = "";
-
-    //                    for (var i = 0; i < data.result.length; i++) {
-    //                        msg += "Error : " + data.result[i] + "\n";
-    //                    }
-
-    //                    $("#modalFooter").html('')
-    //                    $("#modalFooter").append(btnDismiss);
-    //                    $("#modalContent").html('');
-    //                    $("#modalContent").append('<label>' + msg + '</label>');
-
-    //                    $("#btnClose").click(function () {
-    //                        setTimeout(function () {
-    //                            window.location.replace("/Customer");
-    //                        }, 1000);
-    //                    });
-    //                }
-    //                else {
-
-    //                    $("#modalFooter").html('')
-    //                    $("#modalFooter").append(btnDismiss);
-    //                    $("#modalContent").html('');
-    //                    $("#modalContent").append('<label> Error: ' + data.result + '</label>');
-
-    //                    $("#btnClose").click(function () {
-    //                        setTimeout(function () {
-    //                            window.location.replace("/Customer");
-    //                        }, 1000);
-    //                    });
-    //                }
-    //            }
-    //        },
-    //        error: function (jqXHR, textStatus, errorThrown) {
-    //            $("#modalFooter").html('')
-    //            $("#modalFooter").append(btnDismiss);
-    //            $("#modalContent").html('');
-    //            $("#modalContent").append('<label> Error: ' + $(jqXHR.responseText).filter('title').text() + ', ' + textStatus + ', ' + errorThrown + '</label>');
-
-    //            $("#btnClose").click(function () {
-    //                setTimeout(function () {
-    //                    window.location.replace("/Customer");
-    //                }, 1000);
-    //            });
-    //        },
-    //    });
-    //});
-
-    //$("#btnCreate").on('click', function () {
-    //    $("#SKUName").val('');
-    //    $("#Quantity").val('');
-    //    $("#SubTotal").val('');
-
-    //    skuID = "";
-
-    //    pageName = "Create";
-    //    submitFormURL = addActionURL;
-    //});
-});
-
-function FormValidation() {
-
-    // jQuery.validator.addMethod("DecimalFormat", function (value, element, params) {
-    //     return this.optional(element) || /^\d{0,3}(\.\d{0,4})?$/i.test(value);
-    // }, false);
-
-    var ctr = 0;
-    var errorCount = 0;
-    var requiredErrors = [];
-    var otherErrors = []
-    // validator = $("#frmAppForm").validate({
-    //     errorElement: "label",
-    //     errorClass: "errMessage",
-    //     onfocusout: false,
-    //     onkeyup: false,
-    //     onclick: false,
-    //     ignore: [], //to still validate the hidden fields
-    //     rules: {
-    //         txtDosage: {
-    //             required: true
-    //         },
-    //         txtDrug: {
-    //             required: true
-    //         },
-    //         txtPatients: {
-    //             required: true
-    //         },
-    //     },
-    //     messages: {
-    //         txtDosage: {
-    //             required: 'Dosage is required.'
-    //         },
-    //         txtDrug: {
-    //             required: 'Drug is required.'
-    //         },
-    //         txtPatients: {
-    //             required: 'Patient name is required.'
-    //         },
-
-    //     },
-    //     invalidHandler: function () {
-    //         $("#errorMessage").empty();
-    //         $("#errorMessage").css("background-color", "");
-    //         errorCount = validator.numberOfInvalids();
-    //     },
-    //     errorPlacement: function (error, element) {
-    //         ctr++;
-    //         if ($(error).text().indexOf('required') < 0) {
-    //             otherErrors.push('<label class=\"errMessage\"><h5>' + $(error).text() + '.</h5></label> <br />');
-    //         }
-    //         else {
-    //             requiredErrors.push('<label class=\"errMessage\"><h5>' + $(error).text() + '.</h5></label> <br />');
-    //         }
-
-    //         if (ctr == errorCount) {
-
-    //             if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
-    //                 requiredErrors = [];
-    //                 otherErrors = [];
-    //                 $("#divErrorMessage").append('<label class=\"errMessage\"><h5>Highlighted fields are required.</h5></label><br />');
-    //                 $("#divErrorMessage").css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-
-    //             }
-    //             else if (requiredErrors.length == 1) {
-    //                 $("#divErrorMessage").append(requiredErrors);
-    //                 $("#divErrorMessage").css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-
-    //             }
-    //             else if (otherErrors.length == 1) {
-    //                 $("#divErrorMessage").append(otherErrors);
-    //                 $("#divErrorMessage").css({ "background-color": "rgba(183, 2, 2, 0.08)" });
-
-    //             }
-
-    //             requiredErrors = [];
-    //             otherErrors = [];
-    //             ctr = 0;
-    //         }
-
-    //     }
-
-    // });
-}
-
-function DecimalOnly(textbox) {
-    textbox.keydown(function (e) {
-        if ("" + /^[^0-9.]$/.test(e.key) == "true") {
-            e.preventDefault();
-        }
-    });
-}
-
-function NameOnly(textbox) {
-    textbox.keydown(function (e) {
-        if ("" + /^[!@#$%^&*()+=`~?><,\"/\\:;\]\[{}|•√π÷×¶∆£¢€¥°©®™℅¡¿_]$/.test(e.key) == "true") {
-            e.preventDefault();
-        }
-    });
-}
 

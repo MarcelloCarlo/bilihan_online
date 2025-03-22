@@ -211,7 +211,7 @@ namespace bilihan_online.Controllers
             {
                 if (!string.IsNullOrEmpty(name))
                 {
-                    var customerModel = await _context.CustomerModel.Where(c => c.FullName.Contains(name) && c.IsActive).AsQueryable().ToListAsync();
+                    var customerModel = await _context.CustomerModel.Where(c => (c.FullName.Contains(name) || c.MobileNumber.ToString().Contains(name)) && c.IsActive).AsQueryable().ToListAsync();
                     if (customerModel != null)
                     {
                         UpdateResultModel(true, false, customerModel);
