@@ -458,7 +458,7 @@ $(document).ready(function () {
 
                         $.each(data.result, function (key, value) {
 
-                            self.$productSearchResult.append('<a type="button" class="list-group-item list-group-item-action" id="selectedProduct' + value.id + '" value="' + value.id + '"><div class="d-flex w-100 justify-content-between" value="' + value.name + '"><h5 class="mb-1">' + value.name + '</h5><img src="' + value.productImageString + '" alt="..." class="img-thumbnail search-thumbnail"></div><p class="mb-1">SKU: ' + value.code + '</p><small class="unit-price" value="' + value.unitPrice + '">Unit Price: ' + value.unitPrice + '</small></a>');
+                            self.$productSearchResult.append('<a type="button" class="list-group-item list-group-item-action" id="selectedProduct' + value.id + '" value="' + value.id + '"><div class="d-flex w-100 justify-content-between" value="' + value.name + '"><h5 class="mb-1">' + value.name + '</h5><img src="' + value.productImageString + '" alt="..." class="img-thumbnail search-thumbnail w-100"></div><p class="mb-1">SKU: ' + value.code + '</p><small class="unit-price" value="' + value.unitPrice + '">Unit Price: ' + value.unitPrice + '</small></a>');
 
                         });
 

@@ -6,6 +6,16 @@ $(document).ready(function () {
     var successMessage = "";
     var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
 
+	$.validator.addMethod('extension', function(value, element, param) {
+        param = typeof param === 'string' ? param.replace(/,/g, '|') : 'png|jpe?g';
+        return this.optional(element) || value.match(new RegExp('.(' + param + ')$', 'i'));
+    }, 'Please upload a valid image file (jpg, jpeg, or png).');
+
+    $.validator.addMethod('filesize', function(value, element, param) {
+        return this.optional(element) || (element.files[0].size <= param * 1024 * 1024);
+    }, 'File size must be less than {0} MB');
+
+
     var SKUObjectTask = {
 
         init: function () {
@@ -46,6 +56,9 @@ $(document).ready(function () {
 
                     self.$SKUForm = $("#CreateSKUForm");
                     self.$divErrorMessage = $("#divErrorMessage");
+
+					self.$divErrorMessage.empty(); // Clear previous errors
+					self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
                 case "Edit":
                     self.$modalContent.html('');
@@ -71,6 +84,9 @@ $(document).ready(function () {
 
                     self.$SKUForm = $("#EditSKUForm");
                     self.$divErrorMessage = $("#edtdivErrorMessage");
+
+					self.$divErrorMessage.empty(); // Clear previous errors
+					self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
                 default:
                     self.$Name = $("#edtName");
@@ -92,6 +108,9 @@ $(document).ready(function () {
 
                     self.$SKUForm = $("#EditSKUForm");
                     self.$divErrorMessage = $("#edtdivErrorMessage");
+
+					self.$divErrorMessage.empty(); // Clear previous errors
+					self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
             }
 
@@ -116,14 +135,15 @@ $(document).ready(function () {
                 form_data.append("id", skuID);
 
                 self.declaration();
-                self.formValidate();
-                self.setAjaxSendEvent(form_data);
+				self.formValidate();
+				self.setAjaxSendEvent(form_data);
             });
 
             //Submit action
             self.$btnSubmit.on('click', function (e) {
                 e.preventDefault();
 
+				self.declaration();
                 self.setSubmitEvent();
             });
 
@@ -133,6 +153,7 @@ $(document).ready(function () {
                 pageName = "Edit"
                 submitFormURL = editActionURL;
 
+				self.declaration();
                 self.setSubmitEvent();
             });
 
@@ -202,6 +223,7 @@ $(document).ready(function () {
                 contentType: false,
                 processData: false,
                 success: function (data) {
+					
                     if (data.isSuccess) {
                         if (pageName == "Create" || pageName == "Edit") {
 
@@ -210,7 +232,7 @@ $(document).ready(function () {
                             self.$modalContent.html('');
                             self.$modalContent.append('<label>' + successMessage + '</label>');
 
-                            self.$btnClose.click(function () {
+                            $("#btnClose").on('click', function () {
                                 window.location.replace("/SKU");
                             });
                         }
@@ -228,7 +250,6 @@ $(document).ready(function () {
                             self.$IsActive.prop("checked", data.result.isActive);
                         }
 
-
                     } else {
                         if (data.isListResult) {
                             var msg = "";
@@ -242,7 +263,7 @@ $(document).ready(function () {
                             self.$modalContent.html('');
                             self.$modalContent.append('<label>' + msg + '</label>');
 
-                            self.$btnClose.click(function () {
+                            $("#btnClose").on('click', function () {
                                 window.location.replace("/SKU");
                             });
                         }
@@ -253,7 +274,7 @@ $(document).ready(function () {
                             self.$modalContent.html('');
                             self.$modalContent.append('<label> Error: ' + data.result + '</label>');
 
-                            self.$btnClose.click(function () {
+                            $("#btnClose").on('click', function () {
                                 window.location.replace("/SKU");
                             });
                         }
@@ -265,7 +286,7 @@ $(document).ready(function () {
                     self.$modalContent.html('');
                     self.$modalContent.append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
 
-                    self.$btnClose.click(function () {
+                    $("#btnClose").on('click', function () {
                         window.location.replace("/SKU");;
                     });
                 },
@@ -290,7 +311,7 @@ $(document).ready(function () {
             var errorCount = 0;
             var requiredErrors = [];
             var otherErrors = []
-            var uploadRequired = pageName == "Create" ? true : false;
+            var uploadRequired = pageName === "Create" ? true : false;
             validator = self.$SKUForm.validate({
                 errorElement: "span",
                 errorClass: "invalid",
@@ -312,7 +333,8 @@ $(document).ready(function () {
                     },
                     ProductImageHolder: {
                         required: uploadRequired,
-                        extension: "jpg|jpeg|png"
+						extension: "jpg|jpeg|png",
+						filesize: 2 
                     },
                 },
                 messages: {
@@ -329,7 +351,9 @@ $(document).ready(function () {
                     },
                     ProductImageHolder: {
                         required: "Image File is required.",
-                        extension: "Image File must be in jpg, jpeg or png format."
+                        extension: "Image File must be in jpg, jpeg or png format.",
+						filesize: "Image File must not exceed 2MB."
+
                     },
                 },
                 invalidHandler: function () {
@@ -377,7 +401,7 @@ $(document).ready(function () {
         },
         textOnly: function (input) {
             const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Space'];
-            const letterPattern = /^[a-zA-Z\s]$/;
+            const letterPattern = /^[a-zA-Z0-9\s\-_\.\(\)\[\]]$/;
 
             input.on('keydown', function (e) {
                 // Allow control keys
@@ -396,7 +420,7 @@ $(document).ready(function () {
             input.on('paste', function (e) {
                 e.preventDefault();
                 const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
-                const cleanedText = text.replace(/[^a-zA-Z\s]/g, '');
+                const cleanedText = text.replace(/[a-zA-Z0-9\s\-_\.\(\)\[\]]/g, '');
                 $(this).val(cleanedText);
             });
         },

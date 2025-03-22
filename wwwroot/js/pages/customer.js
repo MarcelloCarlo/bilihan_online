@@ -64,6 +64,9 @@ $(document).ready(function () {
 
                     self.$CustomerForm = $("#CreateCustomerForm");
                     self.$divErrorMessage = $("#divErrorMessage");
+
+                    self.$divErrorMessage.empty(); // Clear previous errors
+                    self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
                 case "Edit":
                     self.$modalContent.html('');
@@ -84,6 +87,9 @@ $(document).ready(function () {
 
                     self.$CustomerForm = $("#EditCustomerForm");
                     self.$divErrorMessage = $("#edtdivErrorMessage");
+
+                    self.$divErrorMessage.empty(); // Clear previous errors
+                    self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
                 default:
                     self.$FirstName = $("#edtFirstName");
@@ -105,6 +111,9 @@ $(document).ready(function () {
 
                     self.$CustomerForm = $("#EditCustomerForm");
                     self.$divErrorMessage = $("#edtdivErrorMessage");
+
+                    self.$divErrorMessage.empty(); // Clear previous errors
+                    self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
             }
 
@@ -137,6 +146,7 @@ $(document).ready(function () {
             self.$btnSubmit.on('click', function (e) {
                 e.preventDefault();
 
+                self.declaration();
                 self.setSubmitEvent();
             });
 
@@ -146,6 +156,7 @@ $(document).ready(function () {
                 pageName = "Edit"
                 submitFormURL = editActionURL;
 
+                self.declaration();
                 self.setSubmitEvent();
             });
 
@@ -204,7 +215,7 @@ $(document).ready(function () {
                             self.$modalContent.html('');
                             self.$modalContent.append('<label>' + successMessage + '</label>');
 
-                            self.$btnClose.click(function () {
+                            $("#btnClose").on('click', function () {
                                 window.location.replace("/Customer");
                             });
                         }
@@ -235,7 +246,7 @@ $(document).ready(function () {
                             self.$modalContent.html('');
                             self.$modalContent.append('<label>' + msg + '</label>');
 
-                            self.$btnClose.click(function () {
+                            $("#btnClose").on('click', function () {
                                 window.location.replace("/Customer");
                             });
                         }
@@ -246,7 +257,7 @@ $(document).ready(function () {
                             self.$modalContent.html('');
                             self.$modalContent.append('<label> Error: ' + data.result + '</label>');
 
-                            self.$btnClose.click(function () {
+                            $("#btnClose").on('click', function () {
                                 window.location.replace("/Customer");
                             });
                         }
@@ -258,7 +269,7 @@ $(document).ready(function () {
                     self.$modalContent.html('');
                     self.$modalContent.append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
 
-                    self.$btnClose.click(function () {
+                    $("#btnClose").on('click', function () {
                         window.location.replace("/Customer");
                     });
                 },

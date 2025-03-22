@@ -146,7 +146,7 @@ namespace bilihan_online.Controllers
             {
                 if (SKUModelExists(sKUModel.ID))
                 {
-                    if (!SKUModelExists(sKUModel))
+                    if (!SKUModelExists(sKUModel, "Edit"))
                     {
                         if (sKUModel.ProductImageHolder != null)
                         {
@@ -165,10 +165,10 @@ namespace bilihan_online.Controllers
 
                             }
                         }
-                        // else
-                        // {
-                        //     sKUModel.ProductImage = _context.SKUModel.First(sku => sku.ID == sKUModel.ID).ProductImage;
-                        // }
+                        else
+                        {
+                            sKUModel.ProductImage = _context.SKUModel.First(sku => sku.ID == sKUModel.ID).ProductImage;
+                        }
 
                         _context.SKUModel
                              .Where(sk => sk.ID == sKUModel.ID)
@@ -211,8 +211,13 @@ namespace bilihan_online.Controllers
             return _context.SKUModel.Any(e => e.ID == id);
         }
 
-        private bool SKUModelExists(SKUModel skuModel)
+        private bool SKUModelExists(SKUModel skuModel, string action = "Create")
         {
+            if (action == "Create")
+            {
+                return _context.SKUModel.Any(e => e.Code == skuModel.Code || e.Name == skuModel.Name);
+            }
+
             return _context.SKUModel.Any(e => e.ID != skuModel.ID && (e.Code == skuModel.Code || e.Name == skuModel.Name));
         }
 
