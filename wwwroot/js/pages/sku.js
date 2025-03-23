@@ -89,10 +89,12 @@ $(document).ready(function () {
 					self.$Name = $("#edtName");
 					self.$Code = $("#edtCode");
 					self.$UnitPrice = $("#edtUnitPrice");
+					self.$UserID = $("#edtUserID");
 
 					self.textOnly(self.$Name);
 					self.textOnly(self.$Code);
 					self.decimalOnly(self.$UnitPrice);
+					self.textOnly(self.$UserID);
 
 					self.$ProductImageHolder = $("#edtProductImageHolder");
 					self.$ProductImageString = $("#edtProductImageString");
@@ -210,7 +212,8 @@ $(document).ready(function () {
 						Name: self.$Name.val().trim(),
 						Code: self.$Code.val().trim(),
 						UnitPrice: self.$UnitPrice.val().trim(),
-						IsActive: self.$IsActive.is(":checked") ? "true" : "false"
+						IsActive: self.$IsActive.is(":checked") ? "true" : "false",
+						UserID: pageName == "Edit" ? self.$UserID.val().trim() : ""
 					};
 
 					var ProductImageHolder = self.$ProductImageHolder[0].files;
@@ -333,6 +336,7 @@ $(document).ready(function () {
 			var requiredErrors = [];
 			var otherErrors = []
 			var uploadRequired = pageName === "Create" ? true : false;
+			var userIDEditable = pageName == "Create" ? false : true;
 			validator = self.$SKUForm.validate({
 				errorElement: "span",
 				errorClass: "invalid",
@@ -357,9 +361,13 @@ $(document).ready(function () {
 						extension: "jpg|jpeg|png",
 						filesize: 2
 					},
+					UserID: {
+						required: userIDEditable,
+						minlength: 2
+					}
 				},
 				messages: {
-					FirstName: {
+					Name: {
 						required: "Name is required.",
 						minlength: "Name requires at least 2 letters."
 					},
@@ -376,6 +384,10 @@ $(document).ready(function () {
 						filesize: "Image File must not exceed 2MB."
 
 					},
+					UserID: {
+						required: "User ID is required.",
+						minlength: "User ID requires at least 2 letters."
+					}
 				},
 				invalidHandler: function () {
 					self.$divErrorMessage.empty();

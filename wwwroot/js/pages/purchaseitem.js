@@ -11,6 +11,29 @@ $(document).ready(function () {
     var successMessage = "";
     var btnDismiss = '<button type="button" class="btn btn-primary" data-dismiss="modal" id="btnClose">Ok</button>';
 
+    /**
+     * @namespace PurchaseItemObjectTask
+     * @description Object handling purchase item management functionality including initialization, event handling, form validation, and AJAX operations
+     * @property {Function} init - Initializes the object by calling declaration and setting events
+     * @property {Function} declaration - Declares and initializes all DOM element references and configurations
+     * @property {Function} setEvent - Sets up all event handlers for form elements and buttons
+     * @property {Function} setSubmitEvent - Handles form submission validation and confirmation
+     * @property {Function} setAjaxSendEvent - Handles AJAX POST requests for form submissions
+     * @property {Function} setAjaxSearchCustomer - Handles AJAX customer search functionality
+     * @property {Function} setAjaxSearchSKU - Handles AJAX SKU/product search functionality 
+     * @property {Function} setAjaxGetDetails - Retrieves and displays order details via AJAX
+     * @property {Function} setAjaxGetOrderItemDetails - Retrieves and displays order item details via AJAX
+     * @property {Function} clearInputs - Resets form inputs and error messages
+     * @property {Function} formCustomerValidate - Sets up customer form validation rules
+     * @property {Function} formItemValidate - Sets up item form validation rules
+     * @property {Function} textOnly - Restricts input to text characters only
+     * @property {Function} decimalOnly - Restricts input to decimal numbers only
+     * @property {Function} numberOnly - Restricts input to whole numbers only
+     * @property {Function} formatDateOnly - Formats date string to MM/DD/YYYY
+     * @property {Function} formatDate - Formats date string to MM/DD/YYYY HH:MM:SS AM/PM
+     * @property {Function} dateOnly - Restricts and formats input for dates
+     */
+
     var PurchaseItemObjectTask = {
 
         init: function () {
@@ -334,7 +357,7 @@ $(document).ready(function () {
                             form_data.append(key, inputVal[key]);
                         }
                     }
-                    debugger;
+
                     self.setAjaxSendEvent(form_data);
 
                 });

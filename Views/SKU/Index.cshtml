@@ -36,30 +36,30 @@
     <tbody>
         @foreach (var item in Model)
         {
-                <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Name)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Code)
-                    </td>
-                    <td class="text-end">
-                        @Html.DisplayFor(modelItem => item.UnitPrice)
-                    </td>
-                    <td class="text-end">
-                        @(item.IsActive ? "TRUE" : "FALSE")
-                    </td>
-                    <td class="w-25">
-                        <img src="@Html.DisplayFor(modelItem => item.ProductImageString)" class="img-fluid img-thumbnail" />
-                    </td>
-                    <td>
-                        @{
-                                var btnEdit = "btnEdit" + item.ID;
-                        }
-                        <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
-                            value="@item.ID">Edit</a>
-                    </td>
-                </tr>
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Code)
+                </td>
+                <td class="text-end">
+                    @Html.DisplayFor(modelItem => item.UnitPrice)
+                </td>
+                <td class="text-end">
+                    @(item.IsActive ? "TRUE" : "FALSE")
+                </td>
+                <td class="w-25">
+                    <img src="@Html.DisplayFor(modelItem => item.ProductImageString)" class="img-fluid img-thumbnail" />
+                </td>
+                <td>
+                    @{
+                        var btnEdit = "btnEdit" + item.ID;
+                    }
+                    <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
+                        value="@item.ID">Edit</a>
+                </td>
+            </tr>
         }
     </tbody>
 </table>
@@ -83,23 +83,23 @@
                             </div>
                             <div class="form-group">
                                 <label for="Name" class="control-label">Name</label>
-                                <input id="Name" class="form-control" name="Name" required/>
+                                <input id="Name" class="form-control" name="Name" required />
                                 <span id="spanName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="Code" class="control-label">Code</label>
-                                <input id="Code" class="form-control" name="Code" required/>
+                                <input id="Code" class="form-control" name="Code" required />
                                 <span id="spanCode" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="UnitPrice" class="control-label">Unit Price</label>
-                                <input id="UnitPrice" class="form-control" name="UnitPrice" type="number" required/>
+                                <input id="UnitPrice" class="form-control" name="UnitPrice" type="number" required />
                                 <span id="spanUnitPrice" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="ProductImageHolder" class="control-label">Image File</label>
-                                <input id="ProductImageHolder" class="form-control" type="file"
-                                   accept=".jpg,.jpeg,.png" name="ProductImageHolder" required/>
+                                <input id="ProductImageHolder" class="form-control" type="file" accept=".jpg,.jpeg,.png"
+                                    name="ProductImageHolder" required />
                                 <span id="spanProductImageHolder" class="text-danger"></span>
                             </div>
                             <div class="form-group">
@@ -138,17 +138,17 @@
                             </div>
                             <div class="form-group">
                                 <label for="edtName" class="control-label">Name</label>
-                                <input id="edtName" class="form-control" name="Name" required/>
+                                <input id="edtName" class="form-control" name="Name" required />
                                 <span id="edtspanName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="edtCode" class="control-label">Code</label>
-                                <input id="edtCode" class="form-control" name="Code" required/>
+                                <input id="edtCode" class="form-control" name="Code" required />
                                 <span id="edtspanCode" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="edtUnitPrice" class="control-label">Unit Price</label>
-                                <input id="edtUnitPrice" class="form-control" name="UnitPrice" type="number" required/>
+                                <input id="edtUnitPrice" class="form-control" name="UnitPrice" type="number" required />
                                 <span id="edtspanUnitPrice" class="text-danger"></span>
                             </div>
                             <div class="form-group">
@@ -162,7 +162,7 @@
                                             <div class="card-body">
                                                 <h5 for="edtProductImageHolder" class="control-label">Replace Image</h5>
                                                 <input id="edtProductImageHolder" class="form-control" type="file"
-                                                    accept=".jpg,.jpeg,.png" name="ProductImageHolder"/>
+                                                    accept=".jpg,.jpeg,.png" name="ProductImageHolder" />
                                                 <span id="edtspanProductImageHolder" class="text-danger"></span>
                                             </div>
                                         </div>
@@ -184,7 +184,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="edtUserID" class="control-label">User ID</label>
-                                <input id="edtUserID" class="form-control" disabled />
+                                <input id="edtUserID" class="form-control" name="UserID" />
                             </div>
                             <div class="form-group">
                                 <div class="form-check">
@@ -206,10 +206,10 @@
 
 
 @section Scripts {
-        <script>
-            var addActionURL = '@Url.Action("JsonCreate")';
-            var editActionURL = '@Url.Action("JsonEdit")';
-            var getActionURL = '@Url.Action("JsonDetails")';
-        </script>
-        <script src="~/js/pages/sku.js" asp-append-version="true"></script>
+    <script>
+        var addActionURL = '@Url.Action("JsonCreate")';
+        var editActionURL = '@Url.Action("JsonEdit")';
+        var getActionURL = '@Url.Action("JsonDetails")';
+    </script>
+    <script src="~/js/pages/sku.js" asp-append-version="true"></script>
 }

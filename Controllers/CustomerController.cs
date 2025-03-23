@@ -57,7 +57,10 @@ namespace bilihan_online.Controllers
                         UpdateResultModel(true, false, "Creation Success.");
                     }
                 }
-                //return View(customerModel);
+                else
+                {
+                    UpdateResultModel(false, false, "Full Name/Mobile Number Already Exists.");
+                }
             }
             catch (Exception ex)
             {
@@ -121,7 +124,7 @@ namespace bilihan_online.Controllers
                                  .SetProperty(c => c.City, customer.City)
                                  .SetProperty(c => c.IsActive, customer.IsActive)
                                  .SetProperty(c => c.Timestamp, DateTime.Now)
-                                 .SetProperty(c => c.UserID, DEFAULT_USER_ID));
+                                 .SetProperty(c => c.UserID, customer.UserID));
 
                         await _context.SaveChangesAsync();
 

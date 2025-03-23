@@ -179,7 +179,7 @@ namespace bilihan_online.Controllers
                                  .SetProperty(sk => sk.ProductImage, sKUModel.ProductImage)
                                  .SetProperty(sk => sk.IsActive, sKUModel.IsActive)
                                  .SetProperty(sk => sk.Timestamp, DateTime.Now)
-                                 .SetProperty(sk => sk.UserID, DEFAULT_USER_ID));
+                                 .SetProperty(sk => sk.UserID, sKUModel.UserID));
 
                         await _context.SaveChangesAsync();
 

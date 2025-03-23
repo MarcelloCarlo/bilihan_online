@@ -77,11 +77,13 @@ $(document).ready(function () {
                     self.$LastName = $("#edtLastName");
                     self.$MobileNumber = $("#edtMobileNumber");
                     self.$City = $("#edtCity");
+                    self.$UserID = $("#edtUserID");
 
                     self.textOnly(self.$FirstName);
                     self.textOnly(self.$LastName);
                     self.numbersOnly(self.$MobileNumber);
                     self.textOnly(self.$City);
+                    self.textOnly(self.$UserID);
 
                     self.$IsActive = $("#edtIsActive");
 
@@ -177,7 +179,8 @@ $(document).ready(function () {
                         LastName: self.$LastName.val().trim(),
                         MobileNumber: self.$MobileNumber.val().trim(),
                         City: self.$City.val().trim(),
-                        IsActive: self.$IsActive.is(":checked") ? "true" : "false"
+                        IsActive: self.$IsActive.is(":checked") ? "true" : "false",
+                        UserID: pageName == "Edit" ? self.$UserID.val().trim() : ""
                     };
 
                     var form_data = new FormData();
@@ -292,6 +295,7 @@ $(document).ready(function () {
             var errorCount = 0;
             var requiredErrors = [];
             var otherErrors = []
+            var userIDEditable = pageName == "Create" ? false : true;
             validator = self.$CustomerForm.validate({
                 errorElement: "span",
                 errorClass: "invalid",
@@ -317,6 +321,10 @@ $(document).ready(function () {
                         required: true,
                         minlength: 2
                     },
+                    UserID: {
+                        required: userIDEditable,
+                        minlength: 2
+                    }
                 },
                 messages: {
                     FirstName: {
@@ -336,6 +344,10 @@ $(document).ready(function () {
                         required: "City is required.",
                         minlength: "City requires at least 2 letters."
                     },
+                    UserID: {
+                        required: "User ID is required.",
+                        minlength: "User ID requires at least 2 letters."
+                    }
                 },
                 invalidHandler: function () {
                     self.$divErrorMessage.empty();
