@@ -75,7 +75,7 @@ namespace bilihan_online.Controllers
             }
             catch (Exception ex)
             {
-                UpdateResultModel(false, false, ex);
+                UpdateResultModel(false, true, ex);
             }
 
             return Json(_resultModel);
@@ -153,7 +153,7 @@ namespace bilihan_online.Controllers
             }
             catch (Exception ex)
             {
-                UpdateResultModel(false, false, ex);
+                UpdateResultModel(false, true, ex);
             }
 
             return Json(_resultModel);
@@ -198,7 +198,7 @@ namespace bilihan_online.Controllers
             }
             catch (System.Exception ex)
             {
-                UpdateResultModel(false, false, ex);
+                UpdateResultModel(false, true, ex);
             }
             return Json(_resultModel);
         }
@@ -229,7 +229,7 @@ namespace bilihan_online.Controllers
             }
             catch (Exception ex)
             {
-                UpdateResultModel(false, false, ex);
+                UpdateResultModel(false, true, ex);
             }
 
             return Json(_resultModel);
@@ -274,7 +274,7 @@ namespace bilihan_online.Controllers
             }
             catch (Exception ex)
             {
-                UpdateResultModel(false, false, ex);
+                UpdateResultModel(false, true, ex);
             }
             return Json(_resultModel);
         }
@@ -331,7 +331,7 @@ namespace bilihan_online.Controllers
             }
             catch (Exception ex)
             {
-                UpdateResultModel(false, false, ex);
+                UpdateResultModel(false, true, ex);
             }
 
             return Json(_resultModel);
