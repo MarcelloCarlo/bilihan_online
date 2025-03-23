@@ -36,30 +36,30 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Name)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Code)
-                </td>
-                <td class="text-end">
-                    @Html.DisplayFor(modelItem => item.UnitPrice)
-                </td>
-                <td class="text-end">
-                    @(item.IsActive ? "TRUE" : "FALSE")
-                </td>
-                <td class="w-25">
-                    <img src="@Html.DisplayFor(modelItem => item.ProductImageString)" class="img-fluid img-thumbnail" />
-                </td>
-                <td>
-                    @{
-                        var btnEdit = "btnEdit" + item.ID;
-                    }
-                    <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
-                        value="@item.ID">Edit</a>
-                </td>
-            </tr>
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Code)
+                    </td>
+                    <td class="text-end">
+                        @Html.DisplayFor(modelItem => item.UnitPrice)
+                    </td>
+                    <td class="text-end">
+                        @(item.IsActive ? "TRUE" : "FALSE")
+                    </td>
+                    <td class="w-25">
+                        <img src="@Html.DisplayFor(modelItem => item.ProductImageString)" class="img-fluid img-thumbnail" />
+                    </td>
+                    <td>
+                        @{
+                                var btnEdit = "btnEdit" + item.ID;
+                        }
+                        <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
+                            value="@item.ID">Edit</a>
+                    </td>
+                </tr>
         }
     </tbody>
 </table>
@@ -206,10 +206,10 @@
 
 
 @section Scripts {
-    <script>
-        var addActionURL = '@Url.Action("JsonCreate")';
-        var editActionURL = '@Url.Action("JsonEdit")';
-        var getActionURL = '@Url.Action("JsonDetails")';
-    </script>
-    <script src="~/js/pages/sku.js" asp-append-version="true"></script>
+        <script>
+            var addActionURL = '@Url.Action("JsonCreate")';
+            var editActionURL = '@Url.Action("JsonEdit")';
+            var getActionURL = '@Url.Action("JsonDetails")';
+        </script>
+        <script src="~/js/pages/sku.js" asp-append-version="true"></script>
 }

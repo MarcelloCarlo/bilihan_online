@@ -12,12 +12,17 @@
         <form id="GetCustomerForm">
             @Html.AntiForgeryToken()
             <div class="row mb-3">
+                <div id="initdivErrorMessage"></div>
+            </div>
+            <div class="row mb-3">
                 <label for="Customer" class="col-sm-2 col-form-label">Customer</label>
                 <div class="col-sm-10">
-                    <input id="Customer" class="form-control" type="text" placeholder="Search Customer" aria-label="Search" required />
+                    <input id="Customer" class="form-control" type="text" placeholder="Search Customer"
+                        aria-label="Search" required name="Customer" />
                     <div class="collapse" id="searchDiv">
                         <div class="card list-group" id="customerSearchResult">
-                            <a class="list-group-item d-flex justify-content-between align-items-center" id="selectedCustomer" href="#" type="button">No Results</a>
+                            <a class="list-group-item d-flex justify-content-between align-items-center"
+                                id="selectedCustomer" href="#" type="button">No Results</a>
                         </div>
                     </div>
                 </div>
@@ -28,7 +33,8 @@
             <div class="row mb-3">
                 <label for="DeliveryDate" class="col-sm-2 col-form-label">Delivery Date</label>
                 <div class="col-sm-10">
-                    <input id="DeliveryDate" class="form-control" data-provide="datepicker" required />
+                    <input id="DeliveryDate" class="form-control" data-provide="datepicker"
+                        data-date-format="MM/dd/yyyy" placeholder="MM/dd/yyyy" name="DeliveryDate" required />
                 </div>
                 <div class="col-auto">
                     <span id="spanDeliveryDate" class="text-danger"></span>
@@ -37,7 +43,7 @@
             <div class="row mb-3">
                 <label for="Status" class="col-sm-2 col-form-label">Status</label>
                 <div class="col-sm-10">
-                    <select id="Status" class="form-select">
+                    <select id="Status" class="form-select" name="Status" required>
                         <option selected value="New">New</option>
                         <option value="Completed">Completed</option>
                         <option value="Cancelled">Cancelled</option>
@@ -53,10 +59,7 @@
 
 </div>
 <p>
-    <button id="btnCreate" type="button" class="btn btn-primary" data-bs-toggle="modal"
-            data-bs-target="#modalCreateNew">
-        Add Item
-    </button>
+    <button id="btnCreate" type="button" class="btn btn-primary">Add Item</button>
 </p>
 <table class="table table-hover table-striped table-bordered">
     <thead>
@@ -91,7 +94,7 @@
                         var btnEdit = "btnEdit" + item.ID;
                     }
                     <a href='#' id="@btnEdit" type="button" data-bs-toggle="modal" data-bs-target="#modalEdit"
-                       value="@item.ID">Edit</a>
+                        value="@item.ID">Edit</a>
                 </td>
             </tr>
         }
@@ -99,13 +102,13 @@
 </table>
 
 <div class="d-flex">
-    <div class="p-2 w-100">Total Amount</div>
-    <div class="p-2 flex-shrink-1" id="AmountDue">0</div>
+    <div class="p-2 w-75">Total Amount</div>
+    <div class="p-2 flex-shrink-1" id="AmountDue">0.00</div>
 </div>
 
 <!-- Create Modal -->
 <div class="modal fade" id="modalCreateNew" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-     aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -117,23 +120,28 @@
                     <div class="col-md-12">
                         <form class="row" id="CreateProductItemForm">
                             <div class="form-group">
+                                <div id="divErrorMessage"></div>
+                            </div>
+                            <div class="form-group">
                                 <label for="SKUName" class="control-label">SKU</label>
-                                <input id="SKUName" class="form-control" type="text" placeholder="Search Products" aria-label="Search" required />
+                                <input id="SKUName" class="form-control" type="text" name="SKUName"
+                                    placeholder="Search Products" aria-label="Search" required />
                                 <div class="collapse" id="searchSKUDiv">
                                     <div class="card list-group" id="productSearchResult">
-                                        <a class="list-group-item d-flex justify-content-between align-items-center" id="selectedSKU" href="#" type="button">No Results</a>
+                                        <a class="list-group-item d-flex justify-content-between align-items-center"
+                                            id="selectedSKU" href="#" type="button">No Results</a>
                                     </div>
                                 </div>
                                 <span id="spanSKUName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="Quantity" class="control-label">Quantity</label>
-                                <input id="Quantity" class="form-control" required />
+                                <input id="Quantity" class="form-control" name="Quantity" required />
                                 <span id="spanQuantity" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="SubTotal" class="control-label">Sub Total</label>
-                                <input id="SubTotal" class="form-control" required disabled />
+                                <input id="SubTotal" class="form-control" name="SubTotal" required disabled />
                                 <span id="spanSubTotal" class="text-danger"></span>
                             </div>
 
@@ -142,11 +150,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="btnSubmit" data-bs-toggle="modal"
-                        data-bs-target="#confirmationModal">
-                    Submit
+                <button type="submit" class="btn btn-primary" id="btnSubmit">
+                    Save
                 </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
@@ -154,7 +161,7 @@
 
 <!-- Edit Modal -->
 <div class="modal fade" id="modalEdit" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-     aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -164,26 +171,30 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-12">
-
                         <form class="row" id="EditProductItemForm">
                             <div class="form-group">
+                                <div id="edtdivErrorMessage"></div>
+                            </div>
+                            <div class="form-group">
                                 <label for="edtSKUName" class="control-label">SKU</label>
-                                <input id="edtSKUName" class="form-control" type="text" placeholder="Search Products" aria-label="Search" disabled />
+                                <input id="edtSKUName" class="form-control" type="text" placeholder="Search Products"
+                                    aria-label="Search" name="SKUName" disabled />
                                 <div class="collapse" id="searchSKUDiv">
                                     <div class="card list-group" id="productSearchResult">
-                                        <a class="list-group-item d-flex justify-content-between align-items-center" id="selectedSKU" href="#" type="button">No Results</a>
+                                        <a class="list-group-item d-flex justify-content-between align-items-center"
+                                            id="selectedSKU" href="#" type="button">No Results</a>
                                     </div>
                                 </div>
                                 <span id="edtspanSKUName" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="edtQuantity" class="control-label">Quantity</label>
-                                <input id="edtQuantity" class="form-control" required />
+                                <input id="edtQuantity" class="form-control" name="Quantity" required />
                                 <span id="edtspanQuantity" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label for="edtSubTotal" class="control-label">Sub Total</label>
-                                <input id="edtSubTotal" class="form-control" required disabled />
+                                <input id="edtSubTotal" class="form-control" name="SubTotal" required disabled />
                                 <span id="edtspanSubTotal" class="text-danger"></span>
                             </div>
 
@@ -192,11 +203,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="btnEdtSubmit" data-bs-toggle="modal"
-                        data-bs-target="#confirmationModal">
-                    Submit
+                <button type="submit" class="btn btn-primary" id="btnEdtSubmit">
+                    Save
                 </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

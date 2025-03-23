@@ -22,21 +22,44 @@ $(document).ready(function () {
             var self = this;
 
             self.$Token = $('input[name="__RequestVerificationToken"]');
+            self.$confirmationModal = $("#confirmationModal");
             self.$modalContent = $("#modalContent");
             self.$modalFooter = $("#modalFooter");
-            self.$btnSubmit = $("#btnSubmit");
-            self.$btnEdtSubmit = $("#btnEdtSubmit");
             self.$btnConfirm = $("#btnConfirm");
             self.$btnCreate = $("#btnCreate");
+            self.$btnEdit = $('a[id^="btnEdit"]');
+            self.$modalCreateNew = $("#modalCreateNew");
+            self.$modalEdit = $("#modalEdit");
+
+            self.$btnSubmit = $("#btnSubmit");
+            self.$btnEdtSubmit = $("#btnEdtSubmit");
+
             self.$customerSearchResult = $("#customerSearchResult");
             self.$searchDiv = $("#searchDiv");
-            self.$productSearchResult = $("#productSearchResult");
-            self.$searchSKUDiv = $("#searchSKUDiv");
-            self.$btnEdit = $('a[id^="btnEdit"]');
 
             self.$Customer = $("#Customer");
             self.$DeliveryDate = $("#DeliveryDate");
             self.$Status = $("#Status");
+
+            self.textOnly(self.$Customer);
+            self.dateOnly(self.$DeliveryDate);
+
+            self.$SKUName = $("#SKUName");
+            self.$Quantity = $("#Quantity");
+            self.$SubTotal = $("#SubTotal");
+
+            self.textOnly(self.$SKUName);
+            self.numberOnly(self.$Quantity);
+            self.decimalOnly(self.$SubTotal);
+
+            self.$edtQuantity = $("#edtQuantity");
+            self.numberOnly(self.$edtQuantity);
+
+            self.$CustomerForm = $("#GetCustomerForm");
+            self.$divErrorMessage = $("#initdivErrorMessage");
+
+            self.$productSearchResult = $("#productSearchResult");
+            self.$searchSKUDiv = $("#searchSKUDiv");
 
             self.$AmountDue = $("#AmountDue");
 
@@ -46,10 +69,22 @@ $(document).ready(function () {
                     self.$modalContent.append('<label>Are you sure you want to add this record?</label>');
                     successMessage = 'Record successfully saved.';
 
+                    self.$productSearchResult = $("#productSearchResult");
+                    self.$searchSKUDiv = $("#searchSKUDiv");
+
                     self.$SKUName = $("#SKUName");
                     self.$Quantity = $("#Quantity");
                     self.$SubTotal = $("#SubTotal");
 
+                    self.textOnly(self.$SKUName);
+                    self.numberOnly(self.$Quantity);
+                    self.decimalOnly(self.$SubTotal);
+
+                    self.$ProductItemForm = $("#CreateProductItemForm");
+                    self.$divErrorMessage = $("#divErrorMessage");
+
+                    self.$divErrorMessage.empty();
+                    self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
                 case "Edit":
                     self.$modalContent.html('');
@@ -57,9 +92,18 @@ $(document).ready(function () {
                     successMessage = 'Record successfully updated.';
 
                     self.$SKUName = $("#edtSKUName");
-                    self.$Quantity = $("#edtQuantity");
+                    self.$edtQuantity = $("#edtQuantity");
                     self.$SubTotal = $("#edtSubTotal");
-                    
+
+                    self.textOnly(self.$SKUName);
+                    self.numberOnly(self.$Quantity);
+                    self.decimalOnly(self.$SubTotal);
+
+                    self.$ProductItemForm = $("#EditProductItemForm");
+                    self.$divErrorMessage = $("#edtdivErrorMessage");
+
+                    self.$divErrorMessage.empty();
+                    self.$divErrorMessage.removeClass("alert alert-danger");
                     break;
                 default:
                     if (orderID != 0 && orderID) {
@@ -68,8 +112,15 @@ $(document).ready(function () {
                         form_data.append("id", orderID);
                         self.setAjaxGetDetails(form_data);
                     }
-                    break;
 
+                    self.$CustomerForm = $("#GetCustomerForm");
+                    self.$divErrorMessage = $("#initdivErrorMessage");
+
+                    self.$divErrorMessage.empty();
+                    self.$divErrorMessage.removeClass("alert alert-danger");
+
+                    self.formCustomerValidate();
+                    break;
             }
 
         },
@@ -77,35 +128,161 @@ $(document).ready(function () {
             var self = this;
 
             self.$btnCreate.on('click', function () {
-                self.$SKUName.val('');
-                self.$Quantity.val('');
-                self.$SubTotal.val('');
 
-                skuID = "";
-                skuPrice = 0;
-                orderItemID = "";
+                if (self.$CustomerForm.valid() || (orderID != 0 && orderID)) {
+                    pageName = "Create";
 
-                pageName = "Create";
-                submitFormURL = addActionURL;
+                    self.$divErrorMessage.empty();
+                    self.$divErrorMessage.removeClass("alert alert-danger");
+
+                    self.declaration();
+                    self.formItemValidate();
+                    self.clearInputs();
+
+                    submitFormURL = addActionURL;
+                    self.$modalCreateNew.modal('show');
+                }
+
             });
 
             self.$btnEdit.on('click', function () {
                 pageName = "Edit";
+
                 submitFormURL = orderItemDetails;
                 orderItemID = $(this).attr('value');
                 var form_data = new FormData();
                 form_data.append("id", orderItemID);
+
                 self.declaration();
+                self.formItemValidate();
 
                 self.setAjaxGetOrderItemDetails(form_data);
             });
 
             //Submit action
-            self.$btnSubmit.on('click', function () {
-                //If the inputs are valid
-                //proceed to btnConfirm action
-                //else, throw an error
-                self.declaration();
+            self.$btnSubmit.on('click', function (e) {
+                self.setSubmitEvent();
+            });
+
+            self.$btnEdtSubmit.on('click', function (e) {
+                pageName = "Edit"
+                submitFormURL = editActionURL;
+
+                //self.declaration();
+                self.setSubmitEvent();
+            });
+
+            self.$Customer.on('keyup change', function () {
+                if (self.$Customer.val() <= 0) {
+                    self.$searchDiv.collapse('hide');
+                }
+                else {
+                    submitFormURL = customerSearchURL;
+                    self.$searchDiv.collapse('show');
+                    var form_data = new FormData();
+                    form_data.append("name", self.$Customer.val().trim());
+                    self.setAjaxSearchCustomer(form_data);
+                }
+                ;
+            });
+
+            self.$customerSearchResult.on('click', '.list-group-item', function () {
+                //var bubble = self.$customerSearchResult;
+                customerID = $(this).attr('value').trim();
+
+                var custName = $(this).children(".badge").attr('value').trim();
+                self.$Customer.val(custName);
+
+                self.$searchDiv.collapse('hide');
+
+                self.$customerSearchResult.html('');
+            });
+
+            self.$DeliveryDate.datepicker({
+                format: 'mm/dd/yyyy',
+                startDate: '0d'
+            });
+
+            self.$Status.on('keyup change', function () {
+                if (orderID != 0 && orderID) {
+
+                    submitFormURL = orderUpdateStatus;
+                    var inputVal = {
+                        ID: (orderID == '' || orderID == null ? 0 : orderID),
+                        Status: self.$Status.val().trim(),
+                    };
+
+                    var form_data = new FormData();
+
+                    for (var key in inputVal) {
+                        form_data.append(key, inputVal[key]);
+                    }
+
+                    self.setAjaxSendEvent(form_data);
+                }
+            });
+
+            self.$SKUName.on('keyup change', function () {
+                if (self.$SKUName.val() <= 0) {
+                    self.$searchSKUDiv.collapse('hide');
+                }
+                else {
+                    submitFormURL = productSearchURL;
+                    self.$searchSKUDiv.collapse('show');
+                    var form_data = new FormData();
+                    form_data.append("product", self.$SKUName.val().trim());
+                    self.setAjaxSearchSKU(form_data);
+                }
+            });
+
+            self.$productSearchResult.on('click', '.list-group-item', function () {
+
+                //var bubble = self.$customerSearchResult;
+                skuID = $(this).attr('value').trim();
+
+                var productName = $(this).children(".justify-content-between").attr('value').trim();
+                var unitPrice = $(this).children(".unit-price").attr('value').trim();
+                self.$SKUName.val(productName);
+                self.$Quantity.val("1");
+                self.$SubTotal.val(unitPrice);
+                skuPrice = unitPrice;
+
+                self.$searchSKUDiv.collapse('hide');
+
+                self.$productSearchResult.html('');
+                submitFormURL = addActionURL;
+            });
+
+            self.$Quantity.on('keyup change', function () {
+                if (self.$Quantity.val().length <= 0) {
+                    self.$SubTotal.val(0);
+                }
+                else {
+                    var amount = self.$Quantity.val() * skuPrice;
+                    self.$SubTotal.val(amount.toFixed(2));
+                }
+
+            });
+
+            self.$edtQuantity.on('keyup change', function () {
+                if (self.$edtQuantity.val().length <= 0) {
+                    self.$SubTotal.val(0);
+                }
+                else {
+                    var amount = self.$edtQuantity.val() * skuPrice;
+                    self.$SubTotal.val(amount.toFixed(2));
+                }
+
+            });
+
+        },
+        setSubmitEvent: function () {
+            var self = this;
+            if (self.$ProductItemForm.valid()) {
+                self.$divErrorMessage.empty();
+                self.$divErrorMessage.removeClass("alert alert-danger");
+                self.$confirmationModal.modal('show');
+
                 self.$btnConfirm.on('click', function () {
 
                     if (pageName == "Create") {
@@ -145,10 +322,9 @@ $(document).ready(function () {
                         }
                     }
                     else {
-                        submitFormURL = editActionURL;
                         var inputVal = {
                             ID: orderItemID,
-                            Quantity: self.$Quantity.val().trim(),
+                            Quantity: self.$edtQuantity.val().trim(),
                             Price: self.$SubTotal.val().trim()
                         }
 
@@ -158,142 +334,16 @@ $(document).ready(function () {
                             form_data.append(key, inputVal[key]);
                         }
                     }
-
-                    self.setAjaxSendEvent(form_data);
-                });
-
-            });
-
-            self.$btnEdtSubmit.on('click', function () {
-                //If the inputs are valid
-                //proceed to btnConfirm action
-                //else, throw an error
-                self.declaration();
-                self.$btnConfirm.on('click', function () {
-                    submitFormURL = editActionURL;
-                    var inputVal = {
-                        ID: orderItemID,
-                        Quantity: self.$Quantity.val().trim(),
-                        Price: self.$SubTotal.val().trim()
-                    }
-
-                    var form_data = new FormData();
-
-                    for (var key in inputVal) {
-                        form_data.append(key, inputVal[key]);
-                    }
-
+                    debugger;
                     self.setAjaxSendEvent(form_data);
 
                 });
 
-            });
-
-            self.$Customer.on('keyup change', function () {
-                if (self.$Customer.val() <= 0) {
-                    self.$searchDiv.collapse('hide');
-                }
-                else {
-                    submitFormURL = customerSearchURL;
-                    self.$searchDiv.collapse('show');
-                    var form_data = new FormData();
-                    form_data.append("name", self.$Customer.val().trim());
-                    self.setAjaxSearchCustomer(form_data);
-                }
-                ;
-            });
-
-            self.$customerSearchResult.on('click', '.list-group-item', function () {
-                //var bubble = self.$customerSearchResult;
-                customerID = $(this).attr('value').trim();
-
-                var custName = $(this).children(".badge").attr('value').trim();
-                self.$Customer.val(custName);
-
-                self.$searchDiv.collapse('hide');
-
-                self.$customerSearchResult.html('');
-            });
-
-            self.$SKUName.on('keyup change', function () {
-                if (self.$SKUName.val() <= 0) {
-                    self.$searchSKUDiv.collapse('hide');
-                }
-                else {
-                    submitFormURL = productSearchURL;
-                    self.$searchSKUDiv.collapse('show');
-                    var form_data = new FormData();
-                    form_data.append("product", self.$SKUName.val().trim());
-                    self.setAjaxSearchSKU(form_data);
-                }
-            });
-
-            self.$productSearchResult.on('click', '.list-group-item', function () {
-
-                //var bubble = self.$customerSearchResult;
-                skuID = $(this).attr('value').trim();
-
-                var productName = $(this).children(".justify-content-between").attr('value').trim();
-                var unitPrice = $(this).children(".unit-price").attr('value').trim();
-                self.$SKUName.val(productName);
-                self.$Quantity.val("1");
-                self.$SubTotal.val(unitPrice);
-                skuPrice = unitPrice;
-
-                self.$searchSKUDiv.collapse('hide');
-
-                self.$productSearchResult.html('');
-                submitFormURL = addActionURL;
-            });
-
-            self.$DeliveryDate.datepicker({
-                format: 'dd/mm/yyyy',
-                startDate: '0d'
-            });
-
-            self.$Quantity.on('keyup change', function () {
-                if (self.$Quantity.val().length <= 0) {
-                    self.$SubTotal.val(0);
-                }
-                else {
-                    var quantity = self.$Quantity.val();
-                    self.$SubTotal.val(quantity * skuPrice);
-
-                }
-
-            });
-
-            self.$Quantity.on('keyup change', function () {
-                if (self.$Quantity.val().length <= 0) {
-                    self.$SubTotal.val(0);
-                }
-                else {
-                    var quantity = self.$Quantity.val();
-                    self.$SubTotal.val(quantity * skuPrice);
-
-                }
-
-            });
-
-            self.$Status.on('keyup change', function () {
-                if (orderID != 0 && orderID) {
-
-                    submitFormURL = orderUpdateStatus;
-                    var inputVal = {
-                        ID: (orderID == '' || orderID == null ? 0 : orderID),
-                        Status: self.$Status.val().trim(),
-                    };
-
-                    var form_data = new FormData();
-
-                    for (var key in inputVal) {
-                        form_data.append(key, inputVal[key]);
-                    }
-
-                    self.setAjaxSendEvent(form_data);
-                }
-            });
-
+            } else {
+                self.$divErrorMessage.empty(); // Clear previous errors
+                self.$divErrorMessage.removeClass("alert alert-danger");
+                self.$ProductItemForm.validate().showErrors(); // Show validation errors
+            }
         },
         setAjaxSendEvent: function (inputVal) {
             var self = this;
@@ -303,23 +353,27 @@ $(document).ready(function () {
             $.ajax({
                 url: submitFormURL,
                 type: "POST",
-                //data: JSON.stringify(inputVal),
                 data: inputVal,
                 headers: headers,
-                //dataType: "json",
                 contentType: false,
                 processData: false,
                 success: function (data) {
                     if (data.isSuccess) {
-                        $("#modalFooter").html('')
-                        $("#modalFooter").append(btnDismiss);
-                        $("#modalContent").html('');
-                        $("#modalContent").append('<label>' + successMessage + '</label>');
+                        self.$modalFooter.html('')
+                        self.$modalFooter.append(btnDismiss);
+
+                        if (pageName == "Create" || pageName == "Edit") {
+                            self.$modalContent.html('');
+                            self.$modalContent.append('<label>' + successMessage + '</label>');
+                        }
+                        else {
+                            self.$modalContent.html('');
+                            self.$modalContent.append('<label>Status Updated Successfully.</label>');
+                            self.$confirmationModal.modal('show');
+                        }
 
                         $("#btnClose").on('click', function () {
-                            setTimeout(function () {
-                                window.location.replace("/PurchaseItem");
-                            }, 1000);
+                            window.location.replace("/PurchaseItem");
                         });
 
                     } else {
@@ -330,42 +384,48 @@ $(document).ready(function () {
                                 msg += "Error : " + data.result[i] + "\n";
                             }
 
-                            $("#modalFooter").html('')
-                            $("#modalFooter").append(btnDismiss);
-                            $("#modalContent").html('');
-                            $("#modalContent").append('<label>' + msg + '</label>');
+                            self.$modalFooter.html('')
+                            self.$modalFooter.append(btnDismiss);
+                            self.$modalContent.html('');
+                            self.$modalContent.append('<label>' + msg + '</label>');
 
-                            $("#btnClose").click(function () {
-                                setTimeout(function () {
-                                    window.location.replace("/PurchaseItem");
-                                }, 1000);
+                            if (pageName != "Edit" && pageName != "Create") {
+                                self.$confirmationModal.modal('show');
+                            }
+
+                            $("#btnClose").on('click', function () {
+                                window.location.replace("/PurchaseItem");
                             });
                         }
                         else {
 
-                            $("#modalFooter").html('')
-                            $("#modalFooter").append(btnDismiss);
-                            $("#modalContent").html('');
-                            $("#modalContent").append('<label> Error: ' + data.result + '</label>');
+                            self.$modalFooter.html('')
+                            self.$modalFooter.append(btnDismiss);
+                            self.$modalContent.html('');
+                            self.$modalContent.append('<label> Error: ' + data.result + '</label>');
 
-                            $("#btnClose").click(function () {
-                                setTimeout(function () {
-                                    window.location.replace("/PurchaseItem");
-                                }, 1000);
+                            if (pageName != "Edit" && pageName != "Create") {
+                                self.$confirmationModal.modal('show');
+                            }
+
+                            $("#btnClose").on('click', function () {
+                                window.location.replace("/PurchaseItem");
                             });
                         }
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    $("#modalFooter").html('')
-                    $("#modalFooter").append(btnDismiss);
-                    $("#modalContent").html('');
-                    $("#modalContent").append('<label> Error: ' + $(jqXHR.responseText).filter('title').text() + ', ' + textStatus + ', ' + errorThrown + '</label>');
+                    self.$modalFooter.html('')
+                    self.$modalFooter.append(btnDismiss);
+                    self.$modalContent.html('');
+                    self.$modalContent.append('<p class="text-bg-primary text-wrap text-break">Error Status: (' + jqXHR.status + ') ' + jqXHR.responseText + ', ' + textStatus + ', ' + errorThrown + '</p>');
 
-                    $("#btnClose").click(function () {
-                        setTimeout(function () {
-                            window.location.replace("/PurchaseItem");
-                        }, 1000);
+                    if (pageName != "Edit" && pageName != "Create") {
+                        self.$confirmationModal.modal('show');
+                    }
+
+                    $("#btnClose").on('click', function () {
+                        window.location.replace("/PurchaseItem");;
                     });
                 },
             });
@@ -528,11 +588,11 @@ $(document).ready(function () {
 
                         self.$Customer.val(data.result[0].customerID.fullName);
                         self.$Customer.attr('disabled', true);
-                        self.$DeliveryDate.val(self.formatDate(data.result[0].dateOfDelivery));
+                        self.$DeliveryDate.val(self.formatDateOnly(data.result[0].dateOfDelivery));
                         self.$DeliveryDate.attr('disabled', true);
                         self.$Status.val(data.result[0].status);
                         self.$AmountDue.val(data.result[0].amountDue);
-                        self.$AmountDue.text(data.result[0].amountDue);
+                        self.$AmountDue.text(data.result[0].amountDue.toFixed(2));
 
 
                     } else {
@@ -603,7 +663,7 @@ $(document).ready(function () {
                         skuID = data.result.skuid.id;
 
                         self.$SKUName.val(data.result.skuid.name);
-                        self.$Quantity.val(data.result.quantity);
+                        self.$edtQuantity.val(data.result.quantity);
                         self.$SubTotal.val(data.result.price);
 
                         self.declaration();
@@ -656,15 +716,374 @@ $(document).ready(function () {
                 },
             });
         },
+        clearInputs: function () {
+            var self = this;
+
+            skuID = "";
+            skuPrice = 0;
+            orderItemID = "";
+
+            self.$divErrorMessage.empty();
+            self.$divErrorMessage.removeClass("alert alert-danger");
+
+            self.$SKUName.val('');
+            self.$Quantity.val(0);
+            self.$SubTotal.val(0);
+
+        },
+        formCustomerValidate: function () {
+            var self = this;
+            var ctr = 0;
+            var errorCount = 0;
+            var requiredErrors = [];
+            var otherErrors = []
+
+            validator = self.$CustomerForm.validate({
+                errorElement: "span",
+                errorClass: "invalid",
+                onfocusout: false,
+                onkeyup: false,
+                onclick: false,
+                ignore: [], //to still validate the hidden fields
+                rules: {
+                    Customer: {
+                        required: true,
+                        minlength: 2
+                    },
+                    DeliveryDate: {
+                        required: true,
+                    },
+                    Status: {
+                        required: true,
+                    },
+                },
+                messages: {
+                    Customer: {
+                        required: "Customer is required.",
+                        minlength: "Customer field requires at least 2 letters."
+                    },
+                    DeliveryDate: {
+                        required: "Delivery date is required.",
+                    },
+                    Status: {
+                        required: "Status field is required.",
+                    }
+                },
+                invalidHandler: function () {
+                    self.$divErrorMessage.empty();
+                    self.$divErrorMessage.removeClass("alert alert-danger");
+                    errorCount = validator.numberOfInvalids();
+                },
+                errorPlacement: function (error, element) {
+                    ctr++;
+
+                    if ($(error).text().indexOf('required') < 0) {
+                        otherErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
+                    }
+                    else {
+                        requiredErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
+                    }
+
+                    if (ctr == errorCount) {
+
+                        if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
+                            requiredErrors = [];
+                            otherErrors = [];
+                            self.$divErrorMessage.append('<span class=\"invalid\"><h5>Customer and Delivery Date field is required.</h5></span>');
+                            self.$divErrorMessage.addClass("alert alert-danger");
+
+                        }
+                        else if (requiredErrors.length == 1) {
+                            self.$divErrorMessage.append(requiredErrors);
+                            self.$divErrorMessage.addClass("alert alert-danger");
+
+                        }
+                        else if (otherErrors.length == 1) {
+                            self.$divErrorMessage.append(otherErrors);
+                            self.$divErrorMessage.addClass("alert alert-danger");
+
+                        }
+
+                        requiredErrors = [];
+                        otherErrors = [];
+                        ctr = 0;
+                    }
+
+                }
+            });
+        },
+        formItemValidate: function () {
+            var self = this;
+            var ctr = 0;
+            var errorCount = 0;
+            var requiredErrors = [];
+            var otherErrors = [];
+
+            validator = self.$ProductItemForm.validate({
+                errorElement: "span",
+                errorClass: "invalid",
+                onfocusout: false,
+                onkeyup: false,
+                onclick: false,
+                ignore: [], //to still validate the hidden fields
+                rules: {
+                    SKUName: {
+                        required: true,
+                        minlength: 2
+                    },
+                    Quantity: {
+                        required: true,
+                    },
+                    SubTotal: {
+                        required: true,
+                    },
+                },
+                messages: {
+                    SKUName: {
+                        required: "SKU is required.",
+                        minlength: "SKU field requires at least 2 letters."
+                    },
+                    Quantity: {
+                        required: "Quantity field is required.",
+                    },
+                    SubTotal: {
+                        required: "Subtotal field is required.",
+                    }
+                },
+                invalidHandler: function () {
+                    self.$divErrorMessage.empty();
+                    self.$divErrorMessage.removeClass("alert alert-danger");
+                    errorCount = validator.numberOfInvalids();
+                },
+                errorPlacement: function (error, element) {
+                    ctr++;
+
+                    if ($(error).text().indexOf('required') < 0) {
+                        otherErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
+                    }
+                    else {
+                        requiredErrors.push('<span class=\"invalid\"><h5>' + $(error).text() + '</h5></span>');
+                    }
+
+                    if (ctr == errorCount) {
+
+                        if ((requiredErrors.length == 1 && otherErrors.length == 1) || (requiredErrors.length > 1 || otherErrors.length > 1)) {
+                            requiredErrors = [];
+                            otherErrors = [];
+                            self.$divErrorMessage.append('<span class=\"invalid\"><h5>All fields are required.</h5></span>');
+                            self.$divErrorMessage.addClass("alert alert-danger");
+
+                        }
+                        else if (requiredErrors.length == 1) {
+                            self.$divErrorMessage.append(requiredErrors);
+                            self.$divErrorMessage.addClass("alert alert-danger");
+
+                        }
+                        else if (otherErrors.length == 1) {
+                            self.$divErrorMessage.append(otherErrors);
+                            self.$divErrorMessage.addClass("alert alert-danger");
+
+                        }
+
+                        requiredErrors = [];
+                        otherErrors = [];
+                        ctr = 0;
+                    }
+
+                }
+            });
+        },
+        textOnly: function (input) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Space'];
+            const letterPattern = /^[a-zA-Z0-9\s\-_\.\(\)\[\],]$/;
+
+            input.on('keydown', function (e) {
+                // Allow control keys
+                if (allowedKeys.includes(e.key)) {
+                    return true;
+                }
+
+                // Allow letters and spaces only
+                if (!letterPattern.test(e.key)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Clean invalid characters on paste
+            input.on('paste', function (e) {
+                e.preventDefault();
+                const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                const cleanedText = text.replace(/[a-zA-Z0-9\s\-_\.\(\)\[\],]/g, '');
+                $(this).val(cleanedText);
+            });
+        },
+        decimalOnly: function (input) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+            const numberPattern = /^[0-9.]$/;
+
+            input.on('keydown', function (e) {
+                // Allow control keys
+                if (allowedKeys.includes(e.key)) {
+                    return true;
+                }
+
+                // Allow numbers only
+                if (!numberPattern.test(e.key)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Clean invalid characters on paste
+            input.on('paste', function (e) {
+                e.preventDefault();
+                const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                const cleanedText = text.replace(/[^0-9.]/g, '');
+                $(this).val(cleanedText);
+            });
+        },
+        numberOnly: function (input) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+            const numberPattern = /^[0-9]$/;
+
+            input.on('keydown', function (e) {
+                // Allow control keys
+                if (allowedKeys.includes(e.key)) {
+                    return true;
+                }
+
+                // Allow numbers only
+                if (!numberPattern.test(e.key)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Clean invalid characters on paste
+            input.on('paste', function (e) {
+                e.preventDefault();
+                const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                const cleanedText = text.replace(/[^0-9]/g, '');
+                $(this).val(cleanedText);
+            });
+        },
+        formatDateOnly: function (dateToFormat) {
+            try {
+                // Handle invalid input
+                if (!dateToFormat) {
+                    console.warn('Invalid date provided:', dateToFormat);
+                    return '';
+                }
+
+                const dateObject = new Date(dateToFormat);
+
+                // Check for invalid date
+                if (isNaN(dateObject.getTime())) {
+                    console.warn('Invalid date provided:', dateToFormat);
+                    return '';
+                }
+
+                // Use modern Intl API for localized date formatting
+                return new Intl.DateTimeFormat('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric'
+                }).format(dateObject);
+
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return '';
+            }
+        },
         formatDate: function (dateToFormat) {
-            var dateObject = new Date(dateToFormat);
-            var day = dateObject.getDate();
-            var month = dateObject.getMonth() + 1;
-            var year = dateObject.getFullYear();
-            day = day < 10 ? "0" + day : day;
-            month = month < 10 ? "0" + month : month;
-            var formattedDate = day + "/" + month + "/" + year;
-            return formattedDate;
+            try {
+                // Handle invalid input
+                if (!dateToFormat) {
+                    console.warn('Invalid date provided:', dateToFormat);
+                    return '';
+                }
+
+                const dateObject = new Date(dateToFormat);
+
+                // Check for invalid date
+                if (isNaN(dateObject.getTime())) {
+                    console.warn('Invalid date provided:', dateToFormat);
+                    return '';
+                }
+
+                // Use modern Intl API for localized date formatting
+                return new Intl.DateTimeFormat('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                }).format(dateObject);
+
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return '';
+            }
+        },
+        dateOnly: function (input) {
+            input.on('keydown keyup', function (e) {
+                // Allow special keys
+                if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                    return true;
+                }
+
+                // Block non-numeric keys except '/'
+                if (!/^\d$/.test(e.key) && e.key !== '/') {
+                    e.preventDefault();
+                    return false;
+                }
+
+                let value = $(this).val();
+
+                // Auto-add slashes
+                if (value.length === 2 && e.key !== 'Backspace') {
+                    $(this).val(value + '/');
+                }
+                if (value.length === 5 && e.key !== 'Backspace') {
+                    $(this).val(value + '/');
+                }
+
+                // Prevent more than 10 characters (MM/dd/yyyy)
+                if (value.length >= 10 && e.key !== 'Backspace') {
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Validate day (01-12)
+                if (value.length === 2) {
+                    let month = parseInt(value.split('/')[1]);
+                    if (month < 1 || month > 12) {
+                        $(this).val(value.substring(0, 3));
+                        return false;
+                    }
+                }
+
+                // Validate month (01-31) 
+                if (value.length === 5) {
+                    let day = parseInt(value);
+                    if (day < 1 || day > 31) {
+                        $(this).val('');
+                        return false;
+                    }
+                }
+            });
+
+            // Clean invalid characters on paste
+            input.on('paste', function (e) {
+                e.preventDefault();
+                let text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                let cleaned = text.replace(/[^0-9/]/g, '');
+                if (cleaned.length > 10) cleaned = cleaned.substring(0, 10);
+                $(this).val(cleaned);
+            });
         }
 
     }
