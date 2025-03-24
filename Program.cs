@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using bilihanonline.Data;
+using bilihan_online.Repositories;
+using bilihan_online.Services;
+using bilihan_online.Repositories.Interfaces;
+using bilihan_online.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<bilihanonlineContext>(options =>
@@ -9,6 +13,13 @@ builder.Services.AddDbContext<bilihanonlineContext>(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
+
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<ISKURepository, SKURepository>();
+builder.Services.AddScoped<ISKUService, SKUService>();
+// builder.Services.AddScoped<IPurchaseItemRepository, PurchaseItemRepository>();
+// builder.Services.AddScoped<IPurchaseItemService, PurchaseItemService>();
 
 var app = builder.Build();
 
