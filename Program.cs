@@ -18,6 +18,8 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ISKURepository, SKURepository>();
 builder.Services.AddScoped<ISKUService, SKUService>();
+builder.Services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
+builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddScoped<IPurchaseItemRepository, PurchaseItemRepository>();
 builder.Services.AddScoped<IPurchaseItemService, PurchaseItemService>();
 

@@ -40,6 +40,30 @@ namespace bilihan_online.Services
             }
         }
 
+        public async Task<ResultModel> GetCustomerByNameNumber(string? nameNumber)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(nameNumber))
+                {
+                    return new ResultModel { IsSuccess = false, Result = "Name or number is required" };
+                }
+
+                var customer = await _repository.GetCustomerByNameNumber(nameNumber);
+
+                if (customer == null)
+                {
+                    return new ResultModel { IsSuccess = false, Result = "Customer not found" };
+                }
+
+                return new ResultModel { IsSuccess = true, Result = customer };
+            }
+            catch (Exception ex)
+            {
+                return new ResultModel { IsSuccess = false, Result = ex.Message };
+            }
+        }
+
         public async Task<ResultModel> CreatePurchaseItem(OrderFormModel orderForm)
         {
             try

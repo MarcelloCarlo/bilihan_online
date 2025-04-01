@@ -9,6 +9,7 @@ using bilihan_online.Models;
 using bilihan_online.Services.Interfaces;
 using bilihanonline.Data;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.ComponentModel;
 
 namespace bilihan_online.Controllers
 {
@@ -104,22 +105,18 @@ namespace bilihan_online.Controllers
         {
             try
             {
-                if (!string.IsNullOrEmpty(name))
+                ResultModel result = new ResultModel();
+
+                result = await _purchaseItemService.GetCustomerByNameNumber(name);
+                if (result.IsSuccess)
                 {
-                    var customerModel = await _context.CustomerModel.Where(c => (c.FullName.Contains(name) || c.MobileNumber.ToString().Contains(name)) && c.IsActive).AsQueryable().ToListAsync();
-                    if (customerModel != null)
+                    var customers = result.Result as List<CustomerModel>;
+                    if (customers != null)
                     {
-                        return Json(new ResultModel { IsSuccess = true, Result = customerModel });
-                    }
-                    else
-                    {
-                        return Json(new ResultModel { IsSuccess = false, Result = "No Customer Found." });
+                        return Json(new ResultModel { IsSuccess = true, Result = customers });
                     }
                 }
-                else
-                {
-                    return Json(new ResultModel { IsSuccess = false, Result = "No Customer Found." });
-                }
+                return Json(new ResultModel { IsSuccess = false, Result = "Customer not found" });
 
             }
             catch (Exception ex)

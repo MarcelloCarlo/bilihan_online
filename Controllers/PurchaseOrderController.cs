@@ -8,30 +8,48 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using bilihan_online.Models;
 using bilihanonline.Data;
+using bilihan_online.Services.Interfaces;
 
 namespace bilihan_online.Controllers
 {
     public class PurchaseOrderController : Controller
     {
         private readonly bilihanonlineContext _context;
+        private readonly IPurchaseOrderService _purchaseOrderService;
 
-        public PurchaseOrderController(bilihanonlineContext context)
+        public PurchaseOrderController(bilihanonlineContext context, IPurchaseOrderService purchaseOrderService)
         {
             _context = context;
+            _purchaseOrderService = purchaseOrderService;
         }
 
         // GET: PurchaseOrder
         public async Task<IActionResult> Index()
         {
-            HttpContext.Session.SetInt32("PurchaseOrderID", 0);
-            return View(await _context.PurchaseOrderModel.Include(cust => cust.CustomerID).ToListAsync());
+            try
+            {
+                HttpContext.Session.SetInt32("PurchaseOrderID", 0);
+                List<PurchaseOrderModel>? purchaseOrderList = new List<PurchaseOrderModel>();
+                ResultModel resultModel = await _purchaseOrderService.GetAllPurchaseOrders();
+                purchaseOrderList = resultModel.Result as List<PurchaseOrderModel>;
+                if (purchaseOrderList == null)
+                {
+                    return NotFound();
+                }
+                return View(purchaseOrderList);
+            }
+            catch (System.Exception ex)
+            {
+
+                return BadRequest(ex);
+            }
+
         }
 
         // GET: PurchaseOrder/Create
         public IActionResult Create()
         {
             return RedirectToAction("Index", "PurchaseItem", new { area = "Create" });
-            //return View();
         }
 
         // GET: PurchaseOrder/Edit/5
@@ -44,7 +62,8 @@ namespace bilihan_online.Controllers
                     return NotFound();
                 }
 
-                PurchaseOrderModel purchaseOrderModel = await _context.PurchaseOrderModel.FindAsync(id);
+                ResultModel resultModel = await _purchaseOrderService.GetPurchaseOrderById(id.Value);
+                PurchaseOrderModel? purchaseOrderModel = resultModel.Result as PurchaseOrderModel;
 
                 if (purchaseOrderModel == null)
                 {

@@ -9,6 +9,7 @@ namespace bilihan_online.Repositories.Interfaces
         Task<SKUModel> GetSKUById(int id);
         Task<CustomerModel> GetCustomerById(int id);
         Task<PurchaseOrderModel> GetPurchaseOrderById(int orderId);
+        Task<List<CustomerModel>> GetCustomerByNameNumber(string nameNumber);
         Task<bool> CreatePurchaseItem(PurchaseItemModel purchaseItem);
         Task<OrderFormModel> CreatePurchaseOrder(OrderFormModel orderFormModel);
         Task<bool> UpdatePurchaseItem(PurchaseItemModel purchaseItem);

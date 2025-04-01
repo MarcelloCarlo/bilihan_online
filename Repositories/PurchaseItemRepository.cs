@@ -48,6 +48,11 @@ namespace bilihan_online.Repositories
                 .FirstAsync(c => c.ID == id);
         }
 
+        public async Task<List<CustomerModel>> GetCustomerByNameNumber(string nameNumber)
+        {
+            return await _context.CustomerModel.Where(c => (c.FullName.Contains(nameNumber) || c.MobileNumber.ToString().Contains(nameNumber)) && c.IsActive).AsQueryable().ToListAsync();
+        }
+
         public async Task<bool> CreatePurchaseItem(PurchaseItemModel purchaseItem)
         {
             _context.PurchaseItemModel.Add(purchaseItem);
